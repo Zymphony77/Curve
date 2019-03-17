@@ -183,11 +183,13 @@ public class Main {
 							System.out.println("");
 							System.out.println("Group: " + groupName);
 							System.out.println("Type 'exit' to exit this chat.");
+							
 							showUnreadMessages(readThread);
 							main.isInChat = true;
 							readThread.setInChat(main.isInChat);
 							
 							while(true) {
+								System.out.print("> ");
 								String message = sc.nextLine();
 								if (message.equals("exit")) {
 									main.isInChat = false;

@@ -42,6 +42,7 @@ public class ReadThread implements Runnable {
 				
 				if (isInChat && !text[0].equals(Main.name)) {
 					System.out.println(message.getSender() + ": " + message.getMessage() + "\t" + message.getTimestamp());
+					System.out.print("> ");
 				}
 			}
 			catch(IOException e) {
