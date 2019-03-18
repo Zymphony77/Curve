@@ -4,7 +4,7 @@ import java.io.*;
 import java.util.*;
 
 public class CSVHandler {
-	private static Object convertType (String s) {
+	private static Object convertType(String s) {
 		try {
 			return Integer.parseInt(s);
 		} catch (Exception e) {
@@ -15,11 +15,11 @@ public class CSVHandler {
 		}
 	}
 	
-	public static Vector<Vector<Object>> readCSV (String file) {
+	public static Vector<Vector<Object>> readCSV(String file) throws FileNotFoundException {
 		return readCSV(file, ",");
 	}
 	
-	public static Vector<Vector<Object>> readCSV (String file, String sep) {
+	public static Vector<Vector<Object>> readCSV(String file, String sep) throws FileNotFoundException {
 		Vector<Vector<Object>> data = new Vector<>();
 		
 		try {
@@ -53,7 +53,7 @@ public class CSVHandler {
 			
 			br.close();
 		} catch (FileNotFoundException e) {
-			System.out.println(file + "not found.");
+			throw e;
 		} catch (IOException e) {
 			System.out.println("IO Error");
 		}
@@ -61,13 +61,9 @@ public class CSVHandler {
 		return data;
 	}
 	
-	public static void appendToCSV (String file, Vector<Vector<Object>> data) {
-		appendToCSV(file, data, ",");
-	}
-	
-	public static void appendToCSV (String file, Vector<Vector<Object>> data, String sep) {
+	private static void writeCSV(String file, Vector<Vector<Object>> data, String sep, boolean append) {
 		try {
-			BufferedWriter bw = new BufferedWriter(new FileWriter(file, true));
+			BufferedWriter bw = new BufferedWriter(new FileWriter(file, append));
 			
 			for (Vector<Object> line: data) {
 				String sentence = "";
@@ -76,6 +72,8 @@ public class CSVHandler {
 					if (i > 0) {
 						sentence += ",";
 					}
+					
+					System.out.println(">>> " + line.elementAt(i) + " " + line.elementAt(i).getClass());
 					
 					if (line.elementAt(i) instanceof Number) {
 						sentence += line.elementAt(i);
@@ -92,5 +90,21 @@ public class CSVHandler {
 		} catch (IOException e) {
 			System.out.println("IO Error");
 		}
+	}
+	
+	public static void writeCSV(String file, Vector<Vector<Object>> data) {
+		writeCSV(file, data, ",");
+	}
+	
+	public static void writeCSV(String file, Vector<Vector<Object>> data, String sep) {
+		writeCSV(file, data, sep, false);
+	}
+	
+	public static void appendToCSV(String file, Vector<Vector<Object>> data) {
+		appendToCSV(file, data, ",");
+	}
+	
+	public static void appendToCSV(String file, Vector<Vector<Object>> data, String sep) {
+		writeCSV(file, data, sep, true);
 	}
 }
