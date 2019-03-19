@@ -112,11 +112,11 @@ public class CSVHandler {
 		}
 	}
 	
-	public static void appendLineCSV(String file, Vector<Object> line) {
+	public static void appendLineToCSV(String file, Vector<Object> line) {
 		write​LineCSV(file, line, ",", true);
 	}
 	
-	public static void appendLineCSV(String file, Vector<Object> line, String sep) {
+	public static void appendLineToCSV(String file, Vector<Object> line, String sep) {
 		write​LineCSV(file, line, sep, true);
 	}
 	
