@@ -1,54 +1,56 @@
 package Client;
 
 import utility.csv.*;
-
+import utility.event.*;
 public class ClientLogic {
 
 	// Create Client
-	public static void CreateClientEvent(String Username) {
+	public static void CreateClient(String Username) {
 
 	}
 
-	public static void NewClientEvent(Object X) {
+	public static void NewClient(Object X) {
 
 	}
 
 	// Connecting
-	public static void ConnectEvent(int cid, String Username) {
-
+	public static void Connect(int cid, String ipAddress) {
+		ConnectEvent connectEvent = new ConnectEvent(cid,ipAddress);
+		
 	}
 
-	public static void DisconnectEvent(int cid, String Username) {
-
+	public static void Disconnect(int cid) {
+		DisconnectEvent disconnectEvent = new DisconnectEvent(cid);
+		
 	}
 
 	// Group Event
-	public static void CreateGroupEvent(int cid, String Groupname) {
+	public static void CreateGroup(int cid, String Groupname) {
 
 	}
 
-	public static void JoinEvent(String Groupname) {
+	public static void Join(String Groupname) {
 
 	}
 
-	public static void LeaveEvent(int gid) {
+	public static void Leave(int gid) {
 
 	}
 
-	public static void UpdateGroupEvent(Object X) {
-
+	public static void NewGroup(NewGroupEvent NewGroup) {
+			
 	}
 
 	// Message Event
-	public static void GetUnreadEvent(int gid) {
+	public static void GetUnread(int gid) {
 
 	}
 
-	public static void SendEvent(String Message, int cid, int gid) {
+	public static void Send(String Message, int cid, int gid) {
 
 	}
 
-	public static void UpdateMessageEvent(Object X) {
+	public static void UpdateMessage(Object X) {
 
 	}
 

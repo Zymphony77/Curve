@@ -1,10 +1,10 @@
 package utility.event;
 
-public class UpdateGroupEvent extends Event {
+public class NewGroupEvent extends Event {
 	private int gid;
 	private String groupName;
 	
-	public UpdateGroupEvent(int gid, String groupName) {
+	public NewGroupEvent(int gid, String groupName) {
 		this.gid = gid;
 		this.groupName = groupName;
 	}
