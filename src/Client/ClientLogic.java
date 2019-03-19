@@ -1,6 +1,9 @@
 package Client;
 
+import java.io.FileNotFoundException;
 import java.sql.Timestamp;
+import java.util.Vector;
+
 import utility.csv.*;
 import utility.event.ConnectEvent;
 import utility.event.CreateClientEvent;
@@ -15,55 +18,105 @@ import utility.event.NewMessageEvent;
 import utility.event.SendMessageEvent;
 
 public class ClientLogic {
+	private final static ClientLogic instance = new ClientLogic();
 
-	// Create Client
-	public static void CreateClient(String clientName) {
-		CreateClientEvent createClient = new CreateClientEvent(clientName);
+	public static ClientLogic getInstance() {
+		return instance;
 	}
 
-	public static void NewClient(NewClientEvent newClient) {
+	// Create Client
+	public void CreateClient(String clientName) {
+		CreateClientEvent createClient = new CreateClientEvent(clientName);
 
+	}
+
+	public void NewClient(NewClientEvent newClient) {
+
+		Vector<Vector<Object>> data = new Vector<Vector<Object>>();
+		Vector<Object> client = new Vector<Object>(newClient.getCid());
+		String ipAddress = "cannot work";
+		client.addElement(ipAddress);
+		data.add(client);
+		CSVHandler.writeCSV("Client.csv", data);
 	}
 
 	// Connecting
-	public static void Connect(int cid, String ipAddress) {
+	public void Connect(int cid, String ipAddress) {
 		ConnectEvent connect = new ConnectEvent(cid, ipAddress);
 
 	}
 
-	public static void Disconnect(int cid) {
+	public void Disconnect(int cid) {
 		DisconnectEvent disconnect = new DisconnectEvent(cid);
 
 	}
 
 	// Group Event
-	public static void CreateGroup(int cid, String groupName) {
+	public void CreateGroup(int cid, String groupName) throws FileNotFoundException {
 		CreateGroupEvent createGroup = new CreateGroupEvent(cid, groupName);
+		
+		
+//	if successful, write
+		String fileName = "GroupOf"+cid+".csv";
+		Vector<Vector<Object>> data =CSVHandler.readCSV("GroupLst.csv");
+		int gid =0;
+		for(int i = 0; i < data.size(); i++) {
+			if ((String) data.get(i).get(1)==groupName) {
+				gid = (int) data.get(i).get(0);
+				break;
+			}
+		}
+		data = new Vector<Vector<Object>>();
+		Vector<Object> group = new Vector<Object>();
+		group.addElement(gid);
+		data.add(group);
+		CSVHandler.appendToCSV(fileName, data);
 	}
 
-	public static void Join(int cid, int gid) {
+	public void Join(int cid, int gid) {
 		JoinGroupEvent joinGroup = new JoinGroupEvent(cid, gid);
+		
+//		if successful, write
+			Vector<Vector<Object>> data = new Vector<Vector<Object>>();
+			Vector<Object> group = new Vector<Object>();
+			group.addElement(gid);
+			data.add(group);
+			String fileName = "GroupOf"+cid+".csv";
+			CSVHandler.appendToCSV(fileName, data);
 	}
 
-	public static void Leave(int cid, int gid) {
+	public void Leave(int cid, int gid) {
 		LeaveGroupEvent leaveGroup = new LeaveGroupEvent(cid, gid);
 	}
 
-	public static void NewGroup(NewGroupEvent newGroup) {
-
+	public void NewGroup(NewGroupEvent newGroup) {
+		Vector<Vector<Object>> data = new Vector<Vector<Object>>();
+		Vector<Object> group = new Vector<Object>(newGroup.getGid());
+		group.addElement(newGroup.getGroupName());
+		data.add(group);
+		CSVHandler.appendToCSV("GroupList.csv", data);
 	}
 
 	// Message Event
-	public static void GetUnreadMesaage(int cid, Timestamp lastestTimestamp) {
+	public void GetUnreadMesaage(int cid, Timestamp lastestTimestamp) {
 		GetUnreadMessageEvent getUnreadMessage = new GetUnreadMessageEvent(cid, lastestTimestamp);
 	}
 
-	public static void SendMessage(int cid, int gid, String Message) {
+	public void SendMessage(int cid, int gid, String Message) {
 		SendMessageEvent sendMessageEvent = new SendMessageEvent(cid, gid, Message);
 	}
 
-	public static void NewMessage(NewMessageEvent newMessage) {
-
+	public void NewMessage(NewMessageEvent newMessage) {
+		
+		Vector<Vector<Object>> data = new Vector<Vector<Object>>();
+		Vector<Object> message = new Vector<Object>();
+		message.addElement(newMessage.getClientName());
+		message.addElement(newMessage.getTime());
+		message.addElement(newMessage.getMessage());
+		data.add(message);
+		
+		String fileName = "MessageListOf"+newMessage.getGid()+".csv";
+		CSVHandler.appendToCSV(fileName, data);
 	}
 
 }
