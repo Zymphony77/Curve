@@ -1,6 +1,9 @@
 package server;
 
 import java.util.*;
+
+import connection.Connection;
+
 import java.net.*;
 import java.sql.Timestamp;
 
@@ -30,15 +33,6 @@ public class ServerLogic {
 	private HashMap<Integer, GroupMemberData> groupMemberMap;
 	
 	private ServerLogic() {
-		// Create server socket
-		try {
-			serverSocket = new ServerSocket(SERVER_PORT);
-		} catch (Exception e) {
-			System.out.println("Error in creating server socket. Terminated.");
-			return;
-		}
-		
-		// Create empty client socket map for new connections
 		clientSocketMap = new HashMap<>();
 		
 		if (IS_PRIMARY) {
@@ -55,6 +49,7 @@ public class ServerLogic {
 	
 	private void synchronizeFile(String sourceIp, String destinationIp) {
 		// Transfer file from sourceIp to destinationIp
+		// Possibly merge with FileTransferEvent
 	}
 	
 	private void retrieveClientData() {
@@ -135,10 +130,13 @@ public class ServerLogic {
 	
 	public void handleRequest(Socket clientSocket, Event request) {
 		if (!IS_PRIMARY) {
-			try {
-				// Send to primary
-				return;
-			} catch (Exception e) {}
+			if (!(request instanceof ConnectEvent) && !(request instanceof DisconnectEvent)) {
+				try {
+					// Send to Primary Server
+					// Acts as a client with server identity -- cid = -1
+					return;
+				} catch (Exception e) {}
+			}
 		}
 		
 		if (request instanceof ConnectEvent) {
@@ -163,10 +161,12 @@ public class ServerLogic {
 	}
 	
 	private void createConnection(Socket clientSocket, ConnectEvent event) {
+		// Check server identity -- cid = -1
 		clientSocketMap.put(event.getCid(), clientSocket);
 	}
 	
 	private void removeConnection(DisconnectEvent event) {
+		// Check server identity -- cid = -1
 		clientSocketMap.remove(event.getCid());
 	}
 	
@@ -183,7 +183,7 @@ public class ServerLogic {
 		createConnection(clientSocket, new ConnectEvent(cid));
 		
 		NewClientEvent response = new NewClientEvent(cid, event.getClientName());
-		// Send response back to client
+		Connection.sendObject(clientSocketMap.get(cid), response);
 	}
 	
 	private void updateGroupList(CreateGroupEvent event) {
@@ -199,7 +199,9 @@ public class ServerLogic {
 		addMember(new JoinGroupEvent(event.getCid(), gid));
 		
 		NewGroupEvent response = new NewGroupEvent(gid, event.getGroupName());
-		// Send response back to client
+		for (int client: clientSocketMap.keySet()) {
+			Connection.sendObject(clientSocketMap.get(client), response);
+		}
 	}
 	
 	private void updateMessage(SendMessageEvent event) {
@@ -210,18 +212,35 @@ public class ServerLogic {
 		
 		groupMessageMap.get(gid).addMessage(cid, currentTime, text);
 		
-		// Send NewMessageEvent back to all in gid
+		NewMessageEvent response = new NewMessageEvent(gid, cid, clientDataMap.get(cid).getClientName(), 
+				currentTime, text);
+		for (int client: groupMemberMap.get(gid).getCidSet()) {
+			Connection.sendObject(clientSocketMap.get(client), response);
+		}
 	}
 	
 	private void updateUnreadMessage(GetUnreadMessageEvent event) {
 		Timestamp latest = event.getLatestTimestamp();
+		HashMap<Integer, GroupMessageData> unread = new HashMap<>();
 		
 		for (int gid: groupDataMap.keySet()) {
-			Vector<GroupMessageData.Message> groupMessage = groupMessageMap.get(gid).getMessageVector();
-			Vector<GroupLog.Log> groupLog = groupLogMap.get(gid).getLogVector();
+			if (groupDataMap.containsKey(event.getCid())) {
+				unread.put(gid, new GroupMessageData(gid));
+			} else {
+				continue;
+			}
 			
-			// Later
+			GroupMessageData unreadMessage = unread.get(gid);
+			
+			for (GroupMessageData.Message message: groupMessageMap.get(gid).getMessageVector()) {
+				if (message.getTime().after(latest)) {
+					unreadMessage.addMessage(message.getCid(), message.getTime(), message.getText());
+				}
+			}
 		}
+		
+		// Send unread back
+		// *NEW TYPE* of response -- ResponseUnreadMessageEvent
 	}
 	
 	private void addMember(JoinGroupEvent event) {
@@ -257,7 +276,8 @@ public class ServerLogic {
 	}
 	
 	private void updateData(ServerUpdateEvent event) {
-		// Later
+		// *REMOVE* ServerUpdateEvent -- too rough
+		// *NEW TYPE* of response -- FileTransferEvent
 	}
 	
 	public ServerSocket getServerSocket() {
