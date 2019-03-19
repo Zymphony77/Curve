@@ -2,14 +2,14 @@ package utility.event;
 
 import java.sql.Timestamp;
 
-public class UpdateMessageEvent extends Event {
+public class NewMessageEvent extends Event {
 	private int gid;
 	private int cid;
 	private String clientName;
 	private Timestamp time;
 	private String message;
 	
-	public UpdateMessageEvent(int gid, int cid, String clientName, Timestamp time, String message) {
+	public NewMessageEvent(int gid, int cid, String clientName, Timestamp time, String message) {
 		this.gid = gid;
 		this.cid = cid;
 		this.clientName = clientName;

@@ -37,7 +37,7 @@ public class ClientLogic {
 
 	}
 
-	public static void NewGroup(NewGroupEvent NewGroup) {
+	public static void NewGroup(NewGroupEvent newGroup) {
 			
 	}
 
@@ -50,7 +50,7 @@ public class ClientLogic {
 
 	}
 
-	public static void UpdateMessage(Object X) {
+	public static void NewMessage(NewMessageEvent newMessage) {
 
 	}
 
