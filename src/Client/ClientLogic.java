@@ -4,7 +4,7 @@ import java.io.FileNotFoundException;
 import java.sql.Timestamp;
 import java.util.Vector;
 
-import utility.csv.*;
+import utility.csv.CSVHandler;
 import utility.event.ConnectEvent;
 import utility.event.CreateClientEvent;
 import utility.event.CreateGroupEvent;
@@ -34,6 +34,8 @@ public class ClientLogic {
 
 		Vector<Vector<Object>> data = new Vector<Vector<Object>>();
 		Vector<Object> client = new Vector<Object>(newClient.getCid());
+		client.addElement(newClient.getClientName());
+
 		String ipAddress = "cannot work";
 		client.addElement(ipAddress);
 		data.add(client);
@@ -54,14 +56,12 @@ public class ClientLogic {
 	// Group Event
 	public void CreateGroup(int cid, String groupName) throws FileNotFoundException {
 		CreateGroupEvent createGroup = new CreateGroupEvent(cid, groupName);
-		
-		
-//	if successful, write
-		String fileName = "GroupOf"+cid+".csv";
-		Vector<Vector<Object>> data =CSVHandler.readCSV("GroupLst.csv");
-		int gid =0;
-		for(int i = 0; i < data.size(); i++) {
-			if ((String) data.get(i).get(1)==groupName) {
+
+		// if successful, write
+		Vector<Vector<Object>> data = CSVHandler.readCSV("GroupLst.csv");
+		int gid = 0;
+		for (int i = 0; i < data.size(); i++) {
+			if ((String) data.get(i).get(1) == groupName) {
 				gid = (int) data.get(i).get(0);
 				break;
 			}
@@ -70,19 +70,21 @@ public class ClientLogic {
 		Vector<Object> group = new Vector<Object>();
 		group.addElement(gid);
 		data.add(group);
+		String fileName = "GroupOf" + cid + ".csv";
+
 		CSVHandler.appendToCSV(fileName, data);
 	}
 
 	public void Join(int cid, int gid) {
 		JoinGroupEvent joinGroup = new JoinGroupEvent(cid, gid);
-		
-//		if successful, write
-			Vector<Vector<Object>> data = new Vector<Vector<Object>>();
-			Vector<Object> group = new Vector<Object>();
-			group.addElement(gid);
-			data.add(group);
-			String fileName = "GroupOf"+cid+".csv";
-			CSVHandler.appendToCSV(fileName, data);
+
+		// if successful, write
+		Vector<Vector<Object>> data = new Vector<Vector<Object>>();
+		Vector<Object> group = new Vector<Object>();
+		group.addElement(gid);
+		data.add(group);
+		String fileName = "GroupOf" + cid + ".csv";
+		CSVHandler.appendToCSV(fileName, data);
 	}
 
 	public void Leave(int cid, int gid) {
@@ -107,15 +109,15 @@ public class ClientLogic {
 	}
 
 	public void NewMessage(NewMessageEvent newMessage) {
-		
+
 		Vector<Vector<Object>> data = new Vector<Vector<Object>>();
 		Vector<Object> message = new Vector<Object>();
 		message.addElement(newMessage.getClientName());
 		message.addElement(newMessage.getTime());
 		message.addElement(newMessage.getMessage());
 		data.add(message);
-		
-		String fileName = "MessageListOf"+newMessage.getGid()+".csv";
+
+		String fileName = "MessageListOf" + newMessage.getGid() + ".csv";
 		CSVHandler.appendToCSV(fileName, data);
 	}
 
