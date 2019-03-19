@@ -44,7 +44,8 @@ public class ClientLogic {
 
 	// Connecting
 	public void Connect(int cid, String ipAddress) {
-		ConnectEvent connect = new ConnectEvent(cid, ipAddress);
+		ConnectEvent connect = new ConnectEvent(cid);
+		// Note: Oak removed ipAddress in the argument here
 
 	}
 
