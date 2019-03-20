@@ -4,9 +4,11 @@ import java.util.*;
 
 import connection.Connection;
 
+import java.io.File;
 import java.net.*;
 import java.sql.Timestamp;
 
+import connection.*;
 import utility.event.*;
 import utility.csv.*;
 
@@ -14,8 +16,9 @@ public class ServerLogic {
 	private static final ServerLogic INSTANCE = new ServerLogic();
 	
 	private static final String PRIMARY_IP = "";
+	private static final int PRIMARY_PORT = 1234;
 	private static final String SECONDARY_IP = "";
-	private static final int SERVER_PORT = 1234;
+	private static final int SECONDARY_PORT = 1234;
 	private static final boolean IS_PRIMARY = false;
 	
 	private final String CLIENT_DATA_PATH = "data/client.csv";
@@ -36,9 +39,9 @@ public class ServerLogic {
 		clientSocketMap = new HashMap<>();
 		
 		if (IS_PRIMARY) {
-			synchronizeFile(SECONDARY_IP, PRIMARY_IP);
+			synchronizeFile(SECONDARY_IP, SECONDARY_PORT);
 		} else {
-			synchronizeFile(PRIMARY_IP, SECONDARY_IP);
+			synchronizeFile(PRIMARY_IP, PRIMARY_PORT);
 		}
 		
 		retrieveClientData();
@@ -47,9 +50,22 @@ public class ServerLogic {
 		retrieveGroupLog();
 	}
 	
-	private void synchronizeFile(String sourceIp, String destinationIp) {
-		// Transfer file from sourceIp to destinationIp
-		// Possibly merge with FileTransferEvent
+	private void synchronizeFile(String ipAddress, int port) {
+		try {
+			Socket clientServerSocket = new Socket(ipAddress, port);
+			
+			ServerFileTransferEvent response = 
+					(ServerFileTransferEvent) Connection.receiveObject(clientServerSocket);
+			
+			CSVHandler.writeCSV(CLIENT_DATA_PATH, response.getClientVector());
+			CSVHandler.writeCSV(GROUP_DATA_PATH, response.getGroupVector());
+			CSVHandler.writeCSV(GROUP_MESSAGE_DATA_PATH, response.getGroupMessageVector());
+			CSVHandler.writeCSV(GROUP_LOG_PATH, response.getGroupLogVector());
+
+			clientServerSocket.close();
+		} catch (Exception e) {
+			System.out.println(ipAddress + ":" + port + " cannot be reached.");
+		}
 	}
 	
 	private void retrieveClientData() {
@@ -130,10 +146,11 @@ public class ServerLogic {
 	
 	public void handleRequest(Socket clientSocket, Event request) {
 		if (!IS_PRIMARY) {
-			if (!(request instanceof ConnectEvent) && !(request instanceof DisconnectEvent)) {
+			if (!(request instanceof ConnectEvent) && 
+					!(request instanceof DisconnectEvent) &&
+					!(request instanceof CreateClientEvent)) {
 				try {
-					// Send to Primary Server
-					// Acts as a client with server identity -- cid = -1
+					forwardRequest(request);
 					return;
 				} catch (Exception e) {}
 			}
@@ -155,18 +172,32 @@ public class ServerLogic {
 			addMember((JoinGroupEvent) request);
 		} else if (request instanceof LeaveGroupEvent) {
 			removeMember((LeaveGroupEvent) request);
-		} else if (request instanceof ServerUpdateEvent) {
-			updateData((ServerUpdateEvent) request);
 		}
 	}
 	
+	private void forwardRequest(Event request) throws Exception {
+		Socket secondarySocket = new Socket(PRIMARY_IP, PRIMARY_PORT);
+		
+		Connection.sendObject(secondarySocket, new ConnectEvent(-1));
+		Connection.sendObject(secondarySocket, request);
+		
+		Event response = (Event) Connection.receiveObject(secondarySocket);
+		
+		/* Handle response properly
+		 * 		update -> to all
+		 * 		updateUnread -> to that client
+		 * 		member -> only calculate
+		 */
+		
+		
+		secondarySocket.close();
+	}
+	
 	private void createConnection(Socket clientSocket, ConnectEvent event) {
-		// Check server identity -- cid = -1
 		clientSocketMap.put(event.getCid(), clientSocket);
 	}
 	
 	private void removeConnection(DisconnectEvent event) {
-		// Check server identity -- cid = -1
 		clientSocketMap.remove(event.getCid());
 	}
 	
@@ -239,8 +270,12 @@ public class ServerLogic {
 			}
 		}
 		
-		// Send unread back
-		// *NEW TYPE* of response -- ResponseUnreadMessageEvent
+		try {
+			Connection.sendObject(clientSocketMap.get(event.getCid()), 
+					new UnreadMessageTransferEvent(unread));
+			Connection.sendObject(clientSocketMap.get(event.getCid()), 
+					new GroupDataTransferEvent(CSVHandler.readCSV(GROUP_DATA_PATH)));
+		} catch (Exception e) {}
 	}
 	
 	private void addMember(JoinGroupEvent event) {
@@ -275,11 +310,6 @@ public class ServerLogic {
 		CSVHandler.appendLineToCSV(GROUP_LOG_PATH, update);
 	}
 	
-	private void updateData(ServerUpdateEvent event) {
-		// *REMOVE* ServerUpdateEvent -- too rough
-		// *NEW TYPE* of response -- FileTransferEvent
-	}
-	
 	public ServerSocket getServerSocket() {
 		return serverSocket;
 	}
@@ -288,12 +318,16 @@ public class ServerLogic {
 		return PRIMARY_IP;
 	}
 	
+	public static int getPrimaryPort() {
+		return PRIMARY_PORT;
+	}
+	
 	public static String getSecondaryServerIp() {
 		return SECONDARY_IP;
 	}
 	
-	public static int getServerPort() {
-		return SERVER_PORT;
+	public static int getSecondaryPort() {
+		return SECONDARY_PORT;
 	}
 	
 	public static ServerLogic getInstance() {
