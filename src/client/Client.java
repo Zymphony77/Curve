@@ -8,23 +8,16 @@ import connection.Connection;
 import server.*;
 
 public class Client {
-	private static Socket socket;
 	private static ClientLogic clientLogic;
 	
 	public static void main(String[] args) {
-		try {
-			
-			socket = Connection.connectToServer(Server.getServerIp(), Server.getServerPort());
-			ClientThread c = new ClientThread(socket);
-			clientLogic = ClientLogic.getInstance();
-			clientLogic.setClientSocket(socket);
-			while(true) {
-				/*
-				 * TODO 
-				 * */
-			}
-		} catch (IOException e) {}
+		clientLogic = ClientLogic.getInstance();
+		ClientThread c = new ClientThread(clientLogic.getSocket());
 		
-		socket.close();
+		while(true) {
+			/*
+			 * TODO 
+			 * */
+		}
 	}
 }
