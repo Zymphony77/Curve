@@ -29,63 +29,59 @@ import model.GroupMessageData.Message;
 
 public class ClientLogic {
 	private final static ClientLogic instance = new ClientLogic();
-	private Socket clientSocket;
+	private static Socket clientSocket;
 
 	public static ClientLogic getInstance() {
 		return instance;
 	}
 
-	public void setClientSocket(Socket socket) {
-		this.clientSocket = socket;
-	}
-
 	// Handle receivedObj
-	public void handleReceivedObj(Socket clientSocket, Event receivedObj) {
+	public static void handleReceivedObj(Event receivedObj) {
 
 		if (receivedObj instanceof NewClientEvent) {
-			NewClient((NewClientEvent) receivedObj);
+			newClient((NewClientEvent) receivedObj);
 		} else if (receivedObj instanceof NewGroupEvent) {
-			NewGroup((NewGroupEvent) receivedObj);
+			newGroup((NewGroupEvent) receivedObj);
 		} else if (receivedObj instanceof NewMessageEvent) {
-			NewMessage((NewMessageEvent) receivedObj);
+			newMessage((NewMessageEvent) receivedObj);
 		} else if (receivedObj instanceof UpdateTransferEvent) {
-			UpdateTransfer((UpdateTransferEvent) receivedObj);
+			updateTransfer((UpdateTransferEvent) receivedObj);
 		}
 	}
 
 	// Create Client
 	// send
-	public void CreateClient(String clientName) {
+	public static void createClient(String clientName) {
 		CreateClientEvent createClient = new CreateClientEvent(clientName);
 		Connection.sendObject(clientSocket, createClient);
 
 	}
 
 	// receive
-	public void NewClient(NewClientEvent newClient) {
+	public static void newClient(NewClientEvent newClient) {
 
 		Vector<Vector<Object>> data = new Vector<Vector<Object>>();
 		Vector<Object> client = new Vector<Object>(newClient.getCid());
 		client.addElement(newClient.getClientName());
-
+		
 		String ipAddress = "cannot work";
 		client.addElement(ipAddress);
 		data.add(client);
 		CSVHandler.writeCSV("Client.csv", data);
 
-		// TODO add  function to tell UI
+		// TODO add function to tell UI
 	}
 
 	// Connecting
 	// send
-	public void Connect(int cid, String ipAddress) {
+	public static void connect(int cid, String ipAddress) {
 		ConnectEvent connect = new ConnectEvent(cid);
 		Connection.sendObject(clientSocket, connect);
 
 	}
 
 	// receive
-	public void Disconnect(int cid) {
+	public static void disconnect(int cid) {
 		DisconnectEvent disconnect = new DisconnectEvent(cid);
 		Connection.sendObject(clientSocket, disconnect);
 
@@ -93,7 +89,7 @@ public class ClientLogic {
 
 	// Group Event
 	// send
-	public void CreateGroup(int cid, String groupName) throws FileNotFoundException {
+	public static void createGroup(int cid, String groupName) throws FileNotFoundException {
 		CreateGroupEvent createGroup = new CreateGroupEvent(cid, groupName);
 		Connection.sendObject(clientSocket, createGroup);
 
@@ -114,11 +110,11 @@ public class ClientLogic {
 		String fileName = "GroupOf" + cid + ".csv";
 		CSVHandler.appendToCSV(fileName, data);
 
-		// TODO add  function to tell UI
+		// TODO add function to tell UI
 	}
 
 	// send
-	public void Join(int cid, int gid) {
+	public static void join(int cid, int gid) {
 		JoinGroupEvent joinGroup = new JoinGroupEvent(cid, gid);
 		Connection.sendObject(clientSocket, joinGroup);
 
@@ -130,41 +126,41 @@ public class ClientLogic {
 		String fileName = "GroupOf" + cid + ".csv";
 		CSVHandler.appendToCSV(fileName, data);
 
-		// TODO add  function to tell UI
+		// TODO add function to tell UI
 	}
 
 	// send
-	public void Leave(int cid, int gid) {
+	public static void leave(int cid, int gid) {
 		LeaveGroupEvent leaveGroup = new LeaveGroupEvent(cid, gid);
 		Connection.sendObject(clientSocket, leaveGroup);
 	}
 
 	// receive
-	public void NewGroup(NewGroupEvent newGroup) {
+	public static void newGroup(NewGroupEvent newGroup) {
 		Vector<Vector<Object>> data = new Vector<Vector<Object>>();
 		Vector<Object> group = new Vector<Object>(newGroup.getGid());
 		group.addElement(newGroup.getGroupName());
 		data.add(group);
 		CSVHandler.appendToCSV("GroupList.csv", data);
 
-		// TODO add  function to tell UI
+		// TODO add function to tell UI
 	}
 
 	// Message Event
 	// send
-	public void GetUnreadMesaage(int cid, Timestamp lastestTimestamp) {
+	public static void getUnreadMesaage(int cid, Timestamp lastestTimestamp) {
 		GetUpdateEvent getUnreadMessage = new GetUpdateEvent(cid, lastestTimestamp);
 		Connection.sendObject(clientSocket, getUnreadMessage);
 	}
 
 	// send
-	public void SendMessage(int cid, int gid, String Message) {
+	public static void sendMessage(int cid, int gid, String Message) {
 		SendMessageEvent sendMessageEvent = new SendMessageEvent(cid, gid, Message);
 		Connection.sendObject(clientSocket, sendMessageEvent);
 	}
 
 	// receive
-	public void NewMessage(NewMessageEvent newMessage) {
+	public static void newMessage(NewMessageEvent newMessage) {
 
 		Vector<Vector<Object>> data = new Vector<Vector<Object>>();
 		Vector<Object> message = new Vector<Object>();
@@ -176,23 +172,23 @@ public class ClientLogic {
 		String fileName = "MessageListOf" + newMessage.getGid() + ".csv";
 		CSVHandler.appendToCSV(fileName, data);
 
-		// TODO add  function to tell UI
+		// TODO add function to tell UI
 	}
 
 	// Update Event
-	public void UpdateTransfer(UpdateTransferEvent updateTransfer) {
-		Vector<Vector<Object>> groupData = updateTransfer.getGroupData(); //ข้อมูล group แบบใน csv
+	public static void updateTransfer(UpdateTransferEvent updateTransfer) {
+		Vector<Vector<Object>> groupData = updateTransfer.getGroupData(); // ข้อมูล group แบบใน csv
 		HashMap<Integer, GroupMessageData> unread = updateTransfer.getUnread(); //
-		
+
 		CSVHandler.appendToCSV("GroupList.csv", groupData);
-		
-		for(Integer i:unread.keySet()) {
+
+		for (Integer i : unread.keySet()) {
 			GroupMessageData groupMessageData = unread.get(i);
 			int gid = groupMessageData.getGid();
 			Vector<Message> messageVector = groupMessageData.getMessageVector();
 
 			Vector<Vector<Object>> data = new Vector<Vector<Object>>();
-			for(Message m:messageVector) {
+			for (Message m : messageVector) {
 				Vector<Object> message = new Vector<Object>();
 				message.addElement(m.getCid());
 				message.addElement(m.getTime());
@@ -202,21 +198,21 @@ public class ClientLogic {
 			String fileName = "MessageListOf" + gid + ".csv";
 			CSVHandler.appendToCSV(fileName, data);
 		}
-		
-		// TODO add  function to tell UI
+
+		// TODO add function to tell UI
 	}
 
-	public void GroupLogTransfer(GroupLogTransferEvent groupLogTransfer) {
+	public static void groupLogTransfer(GroupLogTransferEvent groupLogTransfer) {
 		int gid = groupLogTransfer.getGid();
 		int cid = groupLogTransfer.getCid();
 		Timestamp time = groupLogTransfer.getTime();
 		String event = groupLogTransfer.getEvent();
 
 		// TODO
-		// TODO add  function to tell UI
+		// TODO add function to tell UI
 	}
 
-	public void notifyUI(Event event) {
+	public static void notifyUI(Event event) {
 
 		// TODO
 	}

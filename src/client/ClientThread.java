@@ -5,6 +5,7 @@ import java.io.*;
 
 import client.*;
 import connection.Connection;
+import utility.event.Event;
 
 public class ClientThread extends Thread {
 	
@@ -21,6 +22,7 @@ public class ClientThread extends Thread {
 			
 			synchronized (ClientLogic.getInstance()) {
 				// Function to handle receivedObj (request)
+				ClientLogic.handleReceivedObj((Event)receivedObj);
 			}
 		}
 	}
