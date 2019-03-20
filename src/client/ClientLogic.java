@@ -31,14 +31,15 @@ import server.*;
 public class ClientLogic {
 	private final static ClientLogic instance = new ClientLogic();
 	private static Socket socket;
-	private final static String PRIMARY_SERVER_IP="localhost";
-	private final static int PRIMARY_SERVER_PORT=1234;
-	private final static String SECONDARY_SERVER_IP="localhost";
-	private final static int SECONDARY_SERVER_PORT=1234;
+	private final static String PRIMARY_SERVER_IP=ServerLogic.getPrimaryServerIp();
+	private final static int PRIMARY_PORT=ServerLogic.getPrimaryPort();
+	private final static String SECONDARY_SERVER_IP=ServerLogic.getSecondaryServerIp();
+	private final static int SECONDARY_PORT=ServerLogic.getSecondaryPort();
 	
 	public ClientLogic() {
-		socket = Connection.connectToServer(Server.getServerIp(), Server.getServerPort());
+		socket = Connection.connectToServer(PRIMARY_SERVER_IP, PRIMARY_PORT);
 	}
+	
 
 	public static ClientLogic getInstance() {
 		return instance;
@@ -79,6 +80,7 @@ public class ClientLogic {
 		CSVHandler.writeCSV("Client.csv", data);
 
 		// TODO add function to tell UI
+		UILogic.addNewClient(newClient.getCid(),newClient.getClientName()); //temporary name
 	}
 
 	// Connecting
@@ -136,6 +138,7 @@ public class ClientLogic {
 		CSVHandler.appendToCSV(fileName, data);
 
 		// TODO add function to tell UI
+		UILogic.addJoinGroup(cid,gid);
 	}
 
 	// send
@@ -153,6 +156,7 @@ public class ClientLogic {
 		CSVHandler.appendToCSV("GroupList.csv", data);
 
 		// TODO add function to tell UI
+		UILogic.addNewGroup(gid,groupName);
 	}
 
 	// Message Event
@@ -182,11 +186,13 @@ public class ClientLogic {
 		CSVHandler.appendToCSV(fileName, data);
 
 		// TODO add function to tell UI
+		UILogic.addNewMessage(newMessage.getGid(),newMessage.getCid(),newMessage.getClientName(),newMessage.getTime(),newMessage.getMessage());
+		
 	}
 
 	// Update Event
 	public static void updateTransfer(UpdateTransferEvent updateTransfer) {
-		Vector<Vector<Object>> groupData = updateTransfer.getGroupData(); // ������ group Ẻ� csv
+		Vector<Vector<Object>> groupData = updateTransfer.getGroupData(); //  group Ẻ� csv
 		HashMap<Integer, GroupMessageData> unread = updateTransfer.getUnread(); //
 
 		CSVHandler.appendToCSV("GroupList.csv", groupData);
@@ -203,6 +209,7 @@ public class ClientLogic {
 				message.addElement(m.getTime());
 				message.addElement(m.getText());
 				data.add(message);
+				UILogic.addNewMessage(gid,m.getCid(),m.getClientName(),m.getTime(),m.getText());
 			}
 			String fileName = "MessageListOf" + gid + ".csv";
 			CSVHandler.appendToCSV(fileName, data);
