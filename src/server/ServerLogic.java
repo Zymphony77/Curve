@@ -3,17 +3,11 @@ package server;
 import java.util.*;
 
 import connection.Connection;
-import model.ClientData;
-import model.GroupData;
-import model.GroupLog;
-import model.GroupMemberData;
-import model.GroupMessageData;
+import model.*;
 
-import java.io.File;
 import java.net.*;
 import java.sql.Timestamp;
 
-import connection.*;
 import utility.event.*;
 import utility.csv.*;
 
@@ -24,7 +18,7 @@ public class ServerLogic {
 	private static final int PRIMARY_PORT = 1234;
 	private static final String SECONDARY_IP = "";
 	private static final int SECONDARY_PORT = 1234;
-	private static final boolean IS_PRIMARY = false;
+	private static boolean IS_PRIMARY = true;
 	
 	private final String CLIENT_DATA_PATH = "data/client.csv";
 	private final String GROUP_DATA_PATH = "data/group.csv";
@@ -40,7 +34,15 @@ public class ServerLogic {
 	private HashMap<Integer, GroupLog> groupLogMap;
 	private HashMap<Integer, GroupMemberData> groupMemberMap;
 	
+	////////////////////////////////////////////////////////////////////////////////////////////////
+	/////////////////////////////////////  INITIALIZATION  /////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	private ServerLogic() {
+		System.out.print("Initiating ");
+		System.out.print(IS_PRIMARY ? "Primary" : "Secondary");
+		System.out.println(" Server...");
+		
 		clientSocketMap = new HashMap<>();
 		
 		if (IS_PRIMARY) {
@@ -56,6 +58,7 @@ public class ServerLogic {
 	}
 	
 	private void synchronizeFile(String ipAddress, int port) {
+		System.out.println("Synchronizing files with another server...");
 		try {
 			Socket clientServerSocket = new Socket(ipAddress, port);
 			
@@ -69,11 +72,12 @@ public class ServerLogic {
 
 			clientServerSocket.close();
 		} catch (Exception e) {
-			System.out.println(ipAddress + ":" + port + " cannot be reached.");
+			System.out.println("[Server cannot be reach] " + ipAddress + ":" + port + " is not accessible.");
 		}
 	}
 	
 	private void retrieveClientData() {
+		System.out.println("Retrieving Client Data from the file...");
 		clientDataMap = new HashMap<>();
 		try {
 			for (Vector<Object> person: CSVHandler.readCSV(CLIENT_DATA_PATH)) {
@@ -88,6 +92,7 @@ public class ServerLogic {
 	}
 	
 	private void retrieveGroupData() {
+		System.out.println("Retrieving Group Data from the file...");
 		groupDataMap = new HashMap<>();
 		try {
 			for (Vector<Object> group: CSVHandler.readCSV(GROUP_DATA_PATH)) {
@@ -102,6 +107,7 @@ public class ServerLogic {
 	}
 	
 	private void retrieveGroupMessageData() {
+		System.out.println("Retrieving Group Message Data from the file...");
 		groupMessageMap = new HashMap<>();
 		try {
 			for (Vector<Object> message: CSVHandler.readCSV(GROUP_MESSAGE_DATA_PATH)) {
@@ -122,6 +128,7 @@ public class ServerLogic {
 	}
 	
 	private void retrieveGroupLog() {
+		System.out.println("Retrieving Group Log from the file...");
 		groupLogMap = new HashMap<>();
 		groupMemberMap = new HashMap<>();
 		try {
@@ -149,15 +156,24 @@ public class ServerLogic {
 		}
 	}
 	
+	////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////  REQUEST HANDLING  ////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////
+	
 	public void handleRequest(Socket clientSocket, Event request) {
+		System.out.println("Incoming request from " + clientSocket.getInetAddress());
 		if (!IS_PRIMARY) {
 			if (!(request instanceof ConnectEvent) && 
 					!(request instanceof DisconnectEvent) &&
-					!(request instanceof CreateClientEvent)) {
+					!(request instanceof CreateClientEvent) &&
+					!(request instanceof GetUpdateEvent)) {
 				try {
-					forwardRequest(request);
+					System.out.println("Forwarding request to Primary Server...");
+					forwardRequest(clientSocket, request);
 					return;
-				} catch (Exception e) {}
+				} catch (Exception e) {
+					System.out.println("Primary server cannot be reached");
+				}
 			}
 		}
 		
@@ -166,49 +182,73 @@ public class ServerLogic {
 		} else if (request instanceof DisconnectEvent) {
 			removeConnection((DisconnectEvent) request);
 		} else if (request instanceof CreateClientEvent) {
-			updateClient(clientSocket, (CreateClientEvent) request);
+			int cid = createClient(clientSocket, (CreateClientEvent) request);
+			createConnection(clientSocket, new ConnectEvent(cid));
 		} else if (request instanceof CreateGroupEvent) {
-			updateGroupList((CreateGroupEvent) request);
+			updateGroupList(clientSocket, (CreateGroupEvent) request);
 		} else if (request instanceof SendMessageEvent) {
 			updateMessage((SendMessageEvent) request);
-		} else if (request instanceof GetUnreadMessageEvent) {
-			updateUnreadMessage((GetUnreadMessageEvent) request);
+		} else if (request instanceof GetUpdateEvent) {
+			updateClient((GetUpdateEvent) request);
 		} else if (request instanceof JoinGroupEvent) {
-			addMember((JoinGroupEvent) request);
+			addMember(clientSocket, (JoinGroupEvent) request);
 		} else if (request instanceof LeaveGroupEvent) {
-			removeMember((LeaveGroupEvent) request);
+			removeMember(clientSocket, (LeaveGroupEvent) request);
 		}
 	}
 	
-	private void forwardRequest(Event request) throws Exception {
+	private void forwardRequest(Socket clientSocket, Event request) throws Exception {
 		Socket secondarySocket = new Socket(PRIMARY_IP, PRIMARY_PORT);
 		
-		Connection.sendObject(secondarySocket, new ConnectEvent(-1));
 		Connection.sendObject(secondarySocket, request);
 		
 		Event response = (Event) Connection.receiveObject(secondarySocket);
 		
-		/* Handle response properly
-		 * 		update -> to all
-		 * 		updateUnread -> to that client
-		 * 		member -> only calculate
-		 */
-		
+		if (response instanceof NewClientEvent) {
+			Connection.sendObject(clientSocket, response);
+			createConnection(clientSocket, new ConnectEvent(((NewClientEvent) response).getCid()));
+		} else if (response instanceof NewGroupEvent) {
+			for (int gid: clientSocketMap.keySet()) {
+				Connection.sendObject(clientSocketMap.get(gid), response);
+			}
+		} else if (response instanceof NewMessageEvent) {
+			for (int cid: groupMemberMap.get(((NewMessageEvent) response).getGid()).getCidSet()) {
+				if (clientSocketMap.containsKey(cid)) {
+					Connection.sendObject(clientSocketMap.get(cid), response);
+				}
+			}
+		} else if (response instanceof UpdateTransferEvent) {
+			Connection.sendObject(clientSocket, response);
+		} else if (response instanceof GroupLogTransferEvent) {
+			Timestamp time = ((GroupLogTransferEvent) response).getTime();
+			
+			if (((GroupLogTransferEvent) response).getEvent() == "JOIN") {
+				addMember(clientSocket, time, (JoinGroupEvent) request);
+			} else {
+				removeMember(clientSocket, time, (LeaveGroupEvent) request);
+			}
+		}
 		
 		secondarySocket.close();
+		
+		System.out.println("Forwarded request successfully executed!");
 	}
 	
 	private void createConnection(Socket clientSocket, ConnectEvent event) {
+		System.out.println("Connected with " + event.getCid());
 		clientSocketMap.put(event.getCid(), clientSocket);
 	}
 	
 	private void removeConnection(DisconnectEvent event) {
+		System.out.println("Disconnected with " + event.getCid());
 		clientSocketMap.remove(event.getCid());
 	}
 	
-	private void updateClient(Socket clientSocket, CreateClientEvent event) {
+	private int createClient(Socket clientSocket, CreateClientEvent event) {
 		int cid = clientDataMap.size();
 		clientDataMap.put(cid, new ClientData(cid, event.getClientName()));
+		
+		System.out.println("New client being added -> " + cid);
 		
 		Vector<Object> update = new Vector<>();
 		update.add(cid);
@@ -216,15 +256,17 @@ public class ServerLogic {
 		
 		CSVHandler.appendLineToCSV(CLIENT_DATA_PATH, update);
 		
-		createConnection(clientSocket, new ConnectEvent(cid));
-		
 		NewClientEvent response = new NewClientEvent(cid, event.getClientName());
 		Connection.sendObject(clientSocketMap.get(cid), response);
+		
+		return cid;
 	}
 	
-	private void updateGroupList(CreateGroupEvent event) {
+	private void updateGroupList(Socket clientSocket, CreateGroupEvent event) {
 		int gid = groupDataMap.size();
 		groupDataMap.put(gid, new GroupData(gid, event.getGroupName()));
+		
+		System.out.println("New group being added -> " + gid);
 		
 		Vector<Object> update = new Vector<>();
 		update.add(gid);
@@ -232,15 +274,19 @@ public class ServerLogic {
 		
 		CSVHandler.appendLineToCSV(GROUP_DATA_PATH, update);
 		
-		addMember(new JoinGroupEvent(event.getCid(), gid));
+		addMember(clientSocket, new JoinGroupEvent(event.getCid(), gid));
 		
 		NewGroupEvent response = new NewGroupEvent(gid, event.getGroupName());
+		
 		for (int client: clientSocketMap.keySet()) {
-			Connection.sendObject(clientSocketMap.get(client), response);
+			if (clientSocketMap.containsKey(client)) {
+				Connection.sendObject(clientSocketMap.get(client), response);
+			}
 		}
 	}
 	
 	private void updateMessage(SendMessageEvent event) {
+		System.out.println("Incoming new message from " + event.getCid() + "@" + event.getGid() + "...");
 		int gid = event.getGid();
 		int cid = event.getCid();
 		Timestamp currentTime = new Timestamp((new Date()).getTime());
@@ -250,12 +296,16 @@ public class ServerLogic {
 		
 		NewMessageEvent response = new NewMessageEvent(gid, cid, clientDataMap.get(cid).getClientName(), 
 				currentTime, text);
+		
 		for (int client: groupMemberMap.get(gid).getCidSet()) {
-			Connection.sendObject(clientSocketMap.get(client), response);
+			if (clientSocketMap.containsKey(client)) {
+				Connection.sendObject(clientSocketMap.get(client), response);
+			}
 		}
 	}
 	
-	private void updateUnreadMessage(GetUnreadMessageEvent event) {
+	private void updateClient(GetUpdateEvent event) {
+		System.out.println("Fetching data for " + event.getCid() + "...");
 		Timestamp latest = event.getLatestTimestamp();
 		HashMap<Integer, GroupMessageData> unread = new HashMap<>();
 		
@@ -277,42 +327,58 @@ public class ServerLogic {
 		
 		try {
 			Connection.sendObject(clientSocketMap.get(event.getCid()), 
-					new UnreadMessageTransferEvent(unread));
-			Connection.sendObject(clientSocketMap.get(event.getCid()), 
-					new GroupDataTransferEvent(CSVHandler.readCSV(GROUP_DATA_PATH)));
+					new UpdateTransferEvent(CSVHandler.readCSV(GROUP_DATA_PATH), unread));
 		} catch (Exception e) {}
 	}
 	
-	private void addMember(JoinGroupEvent event) {
+	private void addMember(Socket clientSocket, JoinGroupEvent event) {
+		addMember(clientSocket, new Timestamp((new Date()).getTime()), event);
+	}
+	
+	private void addMember(Socket clientSocket, Timestamp time, JoinGroupEvent event) {
 		int gid = event.getGid();
 		int cid = event.getCid();
-		Timestamp currentTime = new Timestamp((new Date()).getTime());
 		
-		groupLogMap.get(gid).addLog(cid, currentTime, "JOIN");
+		System.out.println(cid + " joining " + gid + "...");
+		
+		groupLogMap.get(gid).addLog(cid, time, "JOIN");
 		
 		Vector<Object> update = new Vector<>();
 		update.add(gid);
 		update.add(cid);
-		update.add(currentTime.getTime());
+		update.add(time.getTime());
 		update.add("JOIN");
 		
 		CSVHandler.appendLineToCSV(GROUP_LOG_PATH, update);
+		
+		Connection.sendObject(clientSocket, new GroupLogTransferEvent(gid, cid, time, "JOIN"));
 	}
 	
-	private void removeMember(LeaveGroupEvent event) {
+	private void removeMember(Socket clientSocket, LeaveGroupEvent event) {
+		removeMember(clientSocket, new Timestamp((new Date()).getTime()), event);
+	}
+	
+	private void removeMember(Socket clientSocket, Timestamp time, LeaveGroupEvent event) {
 		int gid = event.getGid();
 		int cid = event.getCid();
-		Timestamp currentTime = new Timestamp((new Date()).getTime());
 		
-		groupLogMap.get(gid).addLog(cid, currentTime, "LEAVE");
+		System.out.println(cid + " leaving " + gid + "...");
+		
+		groupLogMap.get(gid).addLog(cid, time, "LEAVE");
 		
 		Vector<Object> update = new Vector<>();
 		update.add(gid);
 		update.add(cid);
-		update.add(currentTime.getTime());
+		update.add(time.getTime());
 		update.add("LEAVE");
 		
 		CSVHandler.appendLineToCSV(GROUP_LOG_PATH, update);
+		
+		Connection.sendObject(clientSocket, new GroupLogTransferEvent(gid, cid, time, "LEAVE"));
+	}
+	
+	public boolean isPrimary() {
+		return IS_PRIMARY;
 	}
 	
 	public ServerSocket getServerSocket() {
