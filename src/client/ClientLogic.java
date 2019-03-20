@@ -25,6 +25,7 @@ import utility.event.SendMessageEvent;
 import utility.event.UpdateTransferEvent;
 import connection.Connection;
 import model.GroupMessageData;
+import model.GroupMessageData.Message;
 
 public class ClientLogic {
 	private final static ClientLogic instance = new ClientLogic();
@@ -37,7 +38,7 @@ public class ClientLogic {
 	public void setClientSocket(Socket socket) {
 		this.clientSocket = socket;
 	}
-	
+
 	// Handle receivedObj
 	public void handleReceivedObj(Socket clientSocket, Event receivedObj) {
 
@@ -71,15 +72,14 @@ public class ClientLogic {
 		client.addElement(ipAddress);
 		data.add(client);
 		CSVHandler.writeCSV("Client.csv", data);
-		
-		//add function to tell UI
+
+		// TODO add  function to tell UI
 	}
 
 	// Connecting
 	// send
 	public void Connect(int cid, String ipAddress) {
 		ConnectEvent connect = new ConnectEvent(cid);
-		// Note: Oak removed ipAddress in the argument here
 		Connection.sendObject(clientSocket, connect);
 
 	}
@@ -114,7 +114,7 @@ public class ClientLogic {
 		String fileName = "GroupOf" + cid + ".csv";
 		CSVHandler.appendToCSV(fileName, data);
 
-		// add function to tell UI
+		// TODO add  function to tell UI
 	}
 
 	// send
@@ -130,7 +130,7 @@ public class ClientLogic {
 		String fileName = "GroupOf" + cid + ".csv";
 		CSVHandler.appendToCSV(fileName, data);
 
-		// add function to tell UI
+		// TODO add  function to tell UI
 	}
 
 	// send
@@ -147,7 +147,7 @@ public class ClientLogic {
 		data.add(group);
 		CSVHandler.appendToCSV("GroupList.csv", data);
 
-		// add function to tell UI
+		// TODO add  function to tell UI
 	}
 
 	// Message Event
@@ -175,34 +175,50 @@ public class ClientLogic {
 
 		String fileName = "MessageListOf" + newMessage.getGid() + ".csv";
 		CSVHandler.appendToCSV(fileName, data);
-		
-		// add function to tell UI
+
+		// TODO add  function to tell UI
 	}
 
 	// Update Event
 	public void UpdateTransfer(UpdateTransferEvent updateTransfer) {
-		Vector<Vector<Object>> groupData = updateTransfer.getGroupData();
-		HashMap<Integer, GroupMessageData> unread = updateTransfer.getUnread();
+		Vector<Vector<Object>> groupData = updateTransfer.getGroupData(); //ข้อมูล group แบบใน csv
+		HashMap<Integer, GroupMessageData> unread = updateTransfer.getUnread(); //
+		
+		CSVHandler.appendToCSV("GroupList.csv", groupData);
+		
+		for(Integer i:unread.keySet()) {
+			GroupMessageData groupMessageData = unread.get(i);
+			int gid = groupMessageData.getGid();
+			Vector<Message> messageVector = groupMessageData.getMessageVector();
 
-		// unfinished
-		// add function to tell UI
+			Vector<Vector<Object>> data = new Vector<Vector<Object>>();
+			for(Message m:messageVector) {
+				Vector<Object> message = new Vector<Object>();
+				message.addElement(m.getCid());
+				message.addElement(m.getTime());
+				message.addElement(m.getText());
+				data.add(message);
+			}
+			String fileName = "MessageListOf" + gid + ".csv";
+			CSVHandler.appendToCSV(fileName, data);
+		}
+		
+		// TODO add  function to tell UI
 	}
-	
+
 	public void GroupLogTransfer(GroupLogTransferEvent groupLogTransfer) {
 		int gid = groupLogTransfer.getGid();
 		int cid = groupLogTransfer.getCid();
 		Timestamp time = groupLogTransfer.getTime();
 		String event = groupLogTransfer.getEvent();
-		
-		// unfinished
-		// add function to tell UI
+
+		// TODO
+		// TODO add  function to tell UI
 	}
-	
+
 	public void notifyUI(Event event) {
-		
-		// unfinished
+
+		// TODO
 	}
-	
-	
 
 }
