@@ -25,7 +25,7 @@ public class ClientLogic {
 	}
 
 	// Create Client
-	public void CreateClient(String clientName) {
+	public static void CreateClient(String clientName) {
 		CreateClientEvent createClient = new CreateClientEvent(clientName);
 
 	}
