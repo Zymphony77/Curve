@@ -13,18 +13,33 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.text.Font;
 
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.*;
 
+<<<<<<< HEAD
 import Client.ClientGUI;
 import Client.ClientLogic;
+||||||| merged common ancestors
+=======
+import connection.*;
+import server.*;
+>>>>>>> 03b97b3e641535370080bafa86ce75a5e3fe5091
 import utility.csv.*;	
 
 public class Main extends Application {
+<<<<<<< HEAD
 	private static Label curve_heading;
 	private static Label username_label;
 	private static TextField username_field;
 	private static Button login_button;
 	
+||||||| merged common ancestors
+=======
+	private static ServerSocket listenSocket;
+	
+>>>>>>> 03b97b3e641535370080bafa86ce75a5e3fe5091
 	@Override
 	public void start(Stage primaryStage) {
 		try {

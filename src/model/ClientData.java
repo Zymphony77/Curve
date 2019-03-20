@@ -1,4 +1,4 @@
-package server;
+package model;
 
 public class ClientData {
 	private int cid;
