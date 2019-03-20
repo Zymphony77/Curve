@@ -1,9 +1,10 @@
-package connection;
+package client;
 
 import java.net.*;
 import java.io.*;
 
 import client.*;
+import connection.Connection;
 
 public class ClientThread extends Thread {
 	

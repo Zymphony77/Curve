@@ -3,7 +3,7 @@ package utility.event;
 import java.util.HashMap;
 import java.util.Vector;
 
-import server.GroupMessageData;
+import model.GroupMessageData;
 
 public class UnreadMessageTransferEvent {
 	private HashMap<Integer, GroupMessageData> unread;

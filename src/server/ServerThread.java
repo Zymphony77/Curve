@@ -1,6 +1,9 @@
-package connection;
+package server;
 
 import java.net.*;
+
+import connection.Connection;
+
 import java.io.*;
 
 import server.*;

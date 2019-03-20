@@ -31,23 +31,6 @@ public class Main extends Application {
 	}
 	
 	public static void main(String[] args) {
-		try {
-			listenSocket = new ServerSocket(ServerLogic.getServerPort());
-			
-			while(true) {
-				Socket clientSocket = listenSocket.accept();
-				System.out.println("New Connection from Client:" + clientSocket.getInetAddress());
-				ServerThread c = new ServerThread(clientSocket);
-			}
-		} catch(IOException e) {}
-		
 		launch(args);
-	}
-	
-	@Override
-	public void stop() {
-		try {
-			listenSocket.close();
-		} catch (Exception e) {}
 	}
 }
