@@ -31,6 +31,10 @@ import server.*;
 public class ClientLogic {
 	private final static ClientLogic instance = new ClientLogic();
 	private static Socket socket;
+	private final static String PRIMARY_SERVER_IP="localhost";
+	private final static int PRIMARY_SERVER_PORT=1234;
+	private final static String SECONDARY_SERVER_IP="localhost";
+	private final static int SECONDARY_SERVER_PORT=1234;
 	
 	public ClientLogic() {
 		socket = Connection.connectToServer(Server.getServerIp(), Server.getServerPort());
