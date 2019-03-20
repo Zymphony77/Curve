@@ -3,13 +3,12 @@ package utility.event;
 import java.util.HashMap;
 import java.util.Vector;
 
-import model.GroupMessageData;
-
 public class UpdateTransferEvent extends Event {
 	private Vector<Vector<Object>> groupData;
-	private HashMap<Integer, GroupMessageData> unread;
+	private HashMap<Integer, Vector<NewMessageEvent>> unread;
 	
-	public UpdateTransferEvent(Vector<Vector<Object>> groupData, HashMap<Integer, GroupMessageData> unread) {
+	public UpdateTransferEvent(Vector<Vector<Object>> groupData, 
+			HashMap<Integer, Vector<NewMessageEvent>> unread) {
 		this.groupData = groupData;
 		this.unread = unread;
 	}
@@ -18,7 +17,7 @@ public class UpdateTransferEvent extends Event {
 		return groupData;
 	}
 	
-	public HashMap<Integer, GroupMessageData> getUnread() {
+	public HashMap<Integer, Vector<NewMessageEvent>> getUnread() {
 		return unread;
 	}
 }
