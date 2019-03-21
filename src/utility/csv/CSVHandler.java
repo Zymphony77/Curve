@@ -80,7 +80,7 @@ public class CSVHandler {
 		} catch (Exception e) {}
 	}
 	
-	private static void write​LineCSV(String file, Vector<Object> line, String sep, boolean append) {
+	private static void writeLineCSV(String file, Vector<Object> line, String sep, boolean append) {
 		try {
 			createFile(file);
 			BufferedWriter bw = new BufferedWriter(new FileWriter(file, append));
@@ -109,11 +109,11 @@ public class CSVHandler {
 	}
 	
 	public static void writeLineCSV(String file, Vector<Object> line) {
-		write​LineCSV(file, line, ",", false);
+		writeLineCSV(file, line, ",", false);
 	}
 	
 	public static void writeLineCSV(String file, Vector<Object> line, String sep) {
-		write​LineCSV(file, line, sep, false);
+		writeLineCSV(file, line, sep, false);
 	}
 	
 	public static void writeCSV(String file, Vector<Vector<Object>> data) {
@@ -122,20 +122,20 @@ public class CSVHandler {
 	
 	public static void writeCSV(String file, Vector<Vector<Object>> data, String sep) {
 		if (data.size() > 0) {
-			write​LineCSV(file, data.elementAt(0), sep, false);
+			writeLineCSV(file, data.elementAt(0), sep, false);
 		}
 		
 		for (int i = 1; i < data.size(); ++i) {
-			write​LineCSV(file, data.elementAt(i), sep, true);
+			writeLineCSV(file, data.elementAt(i), sep, true);
 		}
 	}
 	
 	public static void appendLineToCSV(String file, Vector<Object> line) {
-		write​LineCSV(file, line, ",", true);
+		writeLineCSV(file, line, ",", true);
 	}
 	
 	public static void appendLineToCSV(String file, Vector<Object> line, String sep) {
-		write​LineCSV(file, line, sep, true);
+		writeLineCSV(file, line, sep, true);
 	}
 	
 	public static void appendToCSV(String file, Vector<Vector<Object>> data) {
@@ -144,7 +144,7 @@ public class CSVHandler {
 	
 	public static void appendToCSV(String file, Vector<Vector<Object>> data, String sep) {
 		for (int i = 0; i < data.size(); ++i) {
-			write​LineCSV(file, data.elementAt(i), sep, true);
+			writeLineCSV(file, data.elementAt(i), sep, true);
 		}
 	}
 }
