@@ -38,7 +38,7 @@ public class ClientLogic {
 
 	public ClientLogic() {
 		socket = Connection.connectToServer(PRIMARY_SERVER_IP, PRIMARY_PORT);
-	//  TODO Po: auto reconnection
+		// TODO Po: auto reconnection
 	}
 
 	public static ClientLogic getInstance() {
@@ -54,16 +54,19 @@ public class ClientLogic {
 	}
 
 	// receive
-	public static void newClient(NewClientEvent newClient) {
+	public static Vector<Object> newClient(NewClientEvent newClient) {
 
 		Vector<Vector<Object>> data = new Vector<Vector<Object>>();
+
 		Vector<Object> client = new Vector<Object>(newClient.getCid());
 		client.addElement(newClient.getClientName());
 
-		String ipAddress = "cannot work";
-		client.addElement(ipAddress);
+		// String ipAddress = "cannot work";
+		// client.addElement(ipAddress);
 		data.add(client);
 		CSVHandler.writeCSV("Client.csv", data);
+
+		return client;
 
 		// TODO add function to tell UI
 //		UILogic.addNewClient(newClient.getCid(), newClient.getClientName()); // temporary name
@@ -87,7 +90,7 @@ public class ClientLogic {
 
 	// Group Event
 	// send
-	public static void createGroup(int cid, String groupName) throws FileNotFoundException {
+	public static Vector<Object> createGroup(int cid, String groupName) throws FileNotFoundException {
 		CreateGroupEvent createGroup = new CreateGroupEvent(cid, groupName);
 		Connection.sendObject(socket, createGroup);
 
@@ -107,12 +110,26 @@ public class ClientLogic {
 		data.add(group);
 		String fileName = "GroupOf" + cid + ".csv";
 		CSVHandler.appendToCSV(fileName, data);
+		
+		// TODO add function to tell UI
+		return group;
+	}
+
+	// receive
+	public static Vector<Object> newGroup(NewGroupEvent newGroup) {
+		Vector<Vector<Object>> data = new Vector<Vector<Object>>();
+		Vector<Object> group = new Vector<Object>(newGroup.getGid());
+		group.addElement(newGroup.getGroupName());
+		data.add(group);
+		CSVHandler.appendToCSV("GroupList.csv", data);
 
 		// TODO add function to tell UI
+//		UILogic.addNewGroup(gid, groupName);
+		return group;
 	}
 
 	// send
-	public static void join(int cid, int gid) {
+	public static Vector<Object> join(int cid, int gid) {
 		JoinGroupEvent joinGroup = new JoinGroupEvent(cid, gid);
 		Connection.sendObject(socket, joinGroup);
 
@@ -126,26 +143,27 @@ public class ClientLogic {
 
 		// TODO add function to tell UI
 //		UILogic.addJoinGroup(cid, gid);
-//		return true;
+		return group;
 	}
 
 	// send
-	public static void leave(int cid, int gid) {
+	public static Vector<Object> leave(int cid, int gid) {
 		LeaveGroupEvent leaveGroup = new LeaveGroupEvent(cid, gid);
 		Connection.sendObject(socket, leaveGroup);
-	}
+		
+		Vector<Vector<Object>> dataNew = new Vector<Vector<Object>>();
+		Vector<Object> group = new Vector<Object>();
+		group.addElement(gid);
+		String fileName = "GroupOf" + cid + ".csv";
 
-	// receive
-	public static boolean newGroup(NewGroupEvent newGroup) {
-		Vector<Vector<Object>> data = new Vector<Vector<Object>>();
-		Vector<Object> group = new Vector<Object>(newGroup.getGid());
-		group.addElement(newGroup.getGroupName());
-		data.add(group);
-		CSVHandler.appendToCSV("GroupList.csv", data);
-
-		// TODO add function to tell UI
-//		UILogic.addNewGroup(gid, groupName);
-		return true;
+		Vector<Vector<Object>> dataOld = CSVHandler.readCSV(fileName);
+		for(Vector<Object> line: dataOld) {
+			if (line!=group) {
+				dataNew.add(line);
+			}
+		}
+		CSVHandler.writeCSV(fileName, dataNew);
+		return group;
 	}
 
 	// Message Event
@@ -162,7 +180,7 @@ public class ClientLogic {
 	}
 
 	// receive
-	public static void newMessage(NewMessageEvent newMessage) {
+	public static Vector<Object> newMessage(NewMessageEvent newMessage) {
 
 		Vector<Vector<Object>> data = new Vector<Vector<Object>>();
 		Vector<Object> message = new Vector<Object>();
@@ -177,7 +195,7 @@ public class ClientLogic {
 		// TODO add function to tell UI
 //		UILogic.addNewMessage(newMessage.getGid(), newMessage.getCid(), newMessage.getClientName(),
 //				newMessage.getTime(), newMessage.getMessage());
-//		return true;
+		return message;
 
 	}
 
