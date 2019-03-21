@@ -29,6 +29,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
@@ -43,17 +44,17 @@ public class ClientGUI extends Application {
     private ClientLogic client;
     private TextArea textChat;
     private TextArea textGroup;
-    private ListView<Group> groupLstView;
-    private ObservableList<Group> groupObservableLst;
-    private ArrayList<Group> groupLst = new ArrayList<Group>();
-    private ListView<Group> groupLstViewAll;
-    private ObservableList<Group> groupObservableLstAll;
-    private ArrayList<Group> groupLstAll = new ArrayList<Group>();
-    private ListView<Message> historyLstView;
-    private ObservableList<Message> historyObservableLst;
-    private ArrayList<Message> history = new ArrayList<Message>();
+    private static ListView<Group> groupLstView;
+    private static ObservableList<Group> groupObservableLst;
+    private static ArrayList<Group> groupLst = new ArrayList<Group>();
+    private static ListView<Group> groupLstViewAll;
+    private static ObservableList<Group> groupObservableLstAll;
+    private static ArrayList<Group> groupLstAll = new ArrayList<Group>();
+    private static ListView<Message> historyLstView;
+    private static ObservableList<Message> historyObservableLst;
+    private static ArrayList<Message> history = new ArrayList<Message>();
     //test
-    private ArrayList<Message> test = new ArrayList<Message>();
+    private static ArrayList<Message> test = new ArrayList<Message>();
     //--
     private Vector<Vector<Object>> groupOf = null;
     private Vector<Vector<Object>> groupAll = null;
@@ -69,7 +70,12 @@ public class ClientGUI extends Application {
 	@Override
 	public void start(Stage stage) {
 			Pane root = new Pane();
-			root.setStyle("-fx-background-color: #ffa88c");
+			//root.setStyle("-fx-background-color: #ffa88c");
+			Image background = new Image("file:res/background2.png");
+			ImageView backgroundShow = new ImageView(background);
+			backgroundShow.setFitHeight(665);
+			backgroundShow.setFitWidth(665);
+			root.getChildren().add(backgroundShow);
 			
 			Scene scene = new Scene(root, 655, 450);
 	   
@@ -77,11 +83,13 @@ public class ClientGUI extends Application {
 			
 			HBox node = new HBox();
 		    Circle online = new Circle(3);
+		    Text space = new Text(" ");
 		    Text text  = new Text(username+" is online");
 		    online.setFill(Color.web("#0ad159"));
 	        node.setSpacing(5);
+	        node.setStyle("-fx-background-color: #FFFFFF;");
 	        node.setAlignment(Pos.CENTER_LEFT);
-	        node.getChildren().addAll(online, text);
+	        node.getChildren().addAll(space, online, text);
 	        node.setLayoutX(5);
 	        node.setLayoutY(5);
 	        node.setPrefSize(335, 25);
@@ -225,8 +233,8 @@ public class ClientGUI extends Application {
 		    historyLstView.setPrefSize(390, 360);
 		    //test
 		    Timestamp testTime = new Timestamp(1);
-		    test.add(new Message("Pooh", testTime, "Hello",0));
-		    test.add(new Message("Ppeiei", testTime, "OMG",0));
+		    test.add(new Message("Pooh", testTime, "Hello"));
+		    test.add(new Message("Ppeiei", testTime, "OMG"));
 		    //
 	    		historyObservableLst = FXCollections.observableArrayList(test);
 	    		historyLstView.setItems(historyObservableLst);
@@ -337,6 +345,7 @@ public class ClientGUI extends Application {
 		    			  groupSelected = null;
 		    			  try {
 		    				  if(gid!=0) {
+		    					  deleteGroupLst(gid);
 		    					  ClientLogic.leave(cid, gid);
 			    				  textGroup.clear();
 			    				  ee.consume();
@@ -361,8 +370,8 @@ public class ClientGUI extends Application {
 		}
 		
 		// status = 0 is myself, status = 1 is other
-		public void displayMessage(String username, String groupname, String message, Timestamp time, int status){
-			Message chat = new Message(username, time, message, status);
+		public static void displayMessage(String username, Timestamp time, String message){
+			Message chat = new Message(username, time, message);
 			history.add(chat);
 			
 			historyObservableLst.clear();
@@ -372,7 +381,7 @@ public class ClientGUI extends Application {
 	    		
 		}
 
-		public void addGroupLst(int cid , int gid, String groupname) {
+		public static void addGroupLst(int gid, String groupname) {
 			groupLst.add(new Group(gid, groupname));
 			
 			groupObservableLst.clear();
@@ -380,7 +389,7 @@ public class ClientGUI extends Application {
 			groupLstView.setItems(groupObservableLst);
 		}
 
-		public void deleteGroupLst(int cid, int gid, String groupName) {
+		public void deleteGroupLst(int gid) {
 			for(int i=0;i<groupLst.size();i++) {
 				if(groupLst.get(i).getGid()==gid) {
 					groupLst.remove(groupLst.get(i));
@@ -393,4 +402,6 @@ public class ClientGUI extends Application {
 			groupLstView.setItems(groupObservableLst);
 			
 		}
+		
+		//public void updateTransfer()
 }
