@@ -121,7 +121,11 @@ public class CSVHandler {
 	}
 	
 	public static void writeCSV(String file, Vector<Vector<Object>> data, String sep) {
-		writeLineCSV(file, data.elementAt(0), sep, false);
+		if (data.size() > 0) {
+			writeLineCSV(file, data.elementAt(0), sep, false);
+		} else {
+			writeLineCSV(file, new Vector<Object>(), sep, false);
+		}
 		
 		for (int i = 0; i < data.size(); ++i) {
 			writeLineCSV(file, data.elementAt(i), sep, true);
