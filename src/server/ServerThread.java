@@ -4,9 +4,6 @@ import java.net.*;
 
 import connection.Connection;
 
-import java.io.*;
-
-import server.*;
 import utility.event.*;
 
 public class ServerThread extends Thread {
@@ -21,6 +18,9 @@ public class ServerThread extends Thread {
 		try {
 			while(true) {
 				Object request = Connection.receiveObject(clientSocket);
+				if (request == null) {
+					break;
+				}
 				
 				synchronized (ServerLogic.getInstance()) {
 					ServerLogic.getInstance().handleRequest(clientSocket, (Event) request);

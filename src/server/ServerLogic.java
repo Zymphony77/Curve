@@ -32,6 +32,8 @@ public class ServerLogic {
 	////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	private ServerLogic() {
+		System.out.println((new Date()).getTime());
+		
 		System.out.print("Initiating ");
 		System.out.print(Server.IS_PRIMARY ? "Primary" : "Secondary");
 		System.out.println(" Server...");
@@ -42,6 +44,12 @@ public class ServerLogic {
 		retrieveGroupData();
 		retrieveGroupMessageData();
 		retrieveGroupLog();
+		
+		System.out.println(clientDataMap.size());
+		System.out.println(groupDataMap.size());
+		System.out.println(groupLogMap.size());
+		System.out.println(groupMemberMap.size());
+		System.out.println(groupMessageMap.size());
 	}
 	
 	void synchronizeFile(String ipAddress, int port) {
@@ -69,13 +77,19 @@ public class ServerLogic {
 		clientDataMap = new HashMap<>();
 		try {
 			for (Vector<Object> person: CSVHandler.readCSV(CLIENT_DATA_PATH)) {
+				if (person.size() == 0) {
+					continue;
+				}
+				
 				int cid = (Integer) person.elementAt(0);
 				String clientName = (String) person.elementAt(1);
 				
 				clientDataMap.put(cid, new ClientData(cid, clientName));
 			}
 		} catch (Exception e) {
-			CSVHandler.writeCSV(CLIENT_DATA_PATH, new Vector<>());
+			System.out.println(e.getClass() + " " + e.getMessage());
+			System.out.println(CLIENT_DATA_PATH + " does not exist");
+			CSVHandler.createFile(CLIENT_DATA_PATH);
 		}
 	}
 	
@@ -84,13 +98,18 @@ public class ServerLogic {
 		groupDataMap = new HashMap<>();
 		try {
 			for (Vector<Object> group: CSVHandler.readCSV(GROUP_DATA_PATH)) {
+				if (group.size() == 0) {
+					continue;
+				}
+				
 				int gid = (Integer) group.elementAt(0);
 				String groupName = (String) group.elementAt(1);
 				
 				groupDataMap.put(gid, new GroupData(gid, groupName));
 			}
 		} catch (Exception e) {
-			CSVHandler.writeCSV(GROUP_DATA_PATH, new Vector<Vector<Object>>());
+			System.out.println(GROUP_DATA_PATH + " does not exist");
+			CSVHandler.createFile(GROUP_DATA_PATH);
 		}
 	}
 	
@@ -99,6 +118,10 @@ public class ServerLogic {
 		groupMessageMap = new HashMap<>();
 		try {
 			for (Vector<Object> message: CSVHandler.readCSV(GROUP_MESSAGE_DATA_PATH)) {
+				if (message.size() == 0) {
+					continue;
+				}
+				
 				int gid = (Integer) message.elementAt(0);
 				int cid = (Integer) message.elementAt(1);
 				Timestamp time = new Timestamp((long) message.elementAt(2));
@@ -111,7 +134,8 @@ public class ServerLogic {
 				groupMessageMap.get(gid).addMessage(cid, time, text);
 			}
 		} catch (Exception e) {
-			CSVHandler.writeCSV(GROUP_MESSAGE_DATA_PATH, new Vector<Vector<Object>>());
+			System.out.println(GROUP_MESSAGE_DATA_PATH + " does not exist");
+			CSVHandler.createFile(GROUP_MESSAGE_DATA_PATH);
 		}
 	}
 	
@@ -121,6 +145,10 @@ public class ServerLogic {
 		groupMemberMap = new HashMap<>();
 		try {
 			for (Vector<Object> log: CSVHandler.readCSV(GROUP_LOG_PATH)) {
+				if (log.size() == 0) {
+					continue;
+				}
+				
 				int gid = (Integer) log.elementAt(0);
 				int cid = (Integer) log.elementAt(1);
 				Timestamp time = new Timestamp((long) log.elementAt(2));
@@ -140,7 +168,8 @@ public class ServerLogic {
 				}
 			}
 		} catch (Exception e) {
-			CSVHandler.writeCSV(GROUP_LOG_PATH, new Vector<Vector<Object>>());
+			System.out.println(GROUP_LOG_PATH + " does not exist");
+			CSVHandler.createFile(GROUP_LOG_PATH);
 		}
 	}
 	
@@ -182,6 +211,8 @@ public class ServerLogic {
 			int cid = createClient(clientSocket, (CreateClientEvent) request);
 			if (clientSocketMap.get(-1) != clientSocket) { 			// If not forwarded
 				createConnection(clientSocket, new ConnectEvent(cid));
+			} else {
+				System.out.println("Forwarded -- Ignore");
 			}
 		} else if (request instanceof CreateGroupEvent) {
 			updateGroupList(clientSocket, (CreateGroupEvent) request);
@@ -282,48 +313,51 @@ public class ServerLogic {
 	}
 	
 	private void createConnection(Socket clientSocket, ConnectEvent event) {
-		System.out.println("Connected with " + event.getCid());
+		System.out.println("Connected with client #" + event.getCid());
 		clientSocketMap.put(event.getCid(), clientSocket);
 	}
 	
 	private void removeConnection(DisconnectEvent event) {
-		System.out.println("Disconnected with " + event.getCid());
+		System.out.println("Disconnected with client #" + event.getCid());
 		clientSocketMap.remove(event.getCid());
 	}
 	
 	private int createClient(Socket clientSocket, CreateClientEvent event) {
-		int cid = clientDataMap.size();
+		int cid = clientDataMap.size() + 1;
 		clientDataMap.put(cid, new ClientData(cid, event.getClientName()));
 		
-		System.out.println("New client being added -> " + cid);
+		System.out.println("New client being added -> client #" + cid);
 		
 		Vector<Object> update = new Vector<>();
 		update.add(cid);
 		update.add(event.getClientName());
-		
+
 		CSVHandler.appendLineToCSV(CLIENT_DATA_PATH, update);
-		
 		NewClientEvent response = new NewClientEvent(cid, event.getClientName());
-		Connection.sendObject(clientSocketMap.get(cid), response);
+		Connection.sendObject(clientSocket, response);
 		
 		forwardResponse(response);
+		
+		System.out.println("Transaction completed");
 		
 		return cid;
 	}
 	
 	private void updateGroupList(Socket clientSocket, CreateGroupEvent event) {
-		int gid = groupDataMap.size();
-		groupDataMap.put(gid, new GroupData(gid, event.getGroupName()));
+		int gid = groupDataMap.size() + 1;
 		
-		System.out.println("New group being added -> " + gid);
+		groupDataMap.put(gid, new GroupData(gid, event.getGroupName()));
+		groupMemberMap.put(gid, new GroupMemberData(gid));
+		groupMessageMap.put(gid, new GroupMessageData(gid));
+		groupLogMap.put(gid, new GroupLog(gid));
+		
+		System.out.println("New group being added -> group #" + gid);
 		
 		Vector<Object> update = new Vector<>();
 		update.add(gid);
 		update.add(event.getGroupName());
 		
 		CSVHandler.appendLineToCSV(GROUP_DATA_PATH, update);
-		
-		addMember(clientSocket, new JoinGroupEvent(event.getCid(), gid));
 		
 		NewGroupEvent response = new NewGroupEvent(gid, event.getGroupName());
 		
@@ -334,10 +368,15 @@ public class ServerLogic {
 		}
 		
 		forwardResponse(response);
+		
+		addMember(clientSocket, new JoinGroupEvent(event.getCid(), gid));
+		
+		System.out.println("Transaction completed");
 	}
 	
 	private void updateMessage(SendMessageEvent event) {
-		System.out.println("Incoming new message from " + event.getCid() + "@" + event.getGid() + "...");
+		System.out.println("Incoming new message from client #" + event.getCid() + " @group #" + event.getGid());
+		
 		int gid = event.getGid();
 		int cid = event.getCid();
 		Timestamp currentTime = new Timestamp((new Date()).getTime());
@@ -350,15 +389,18 @@ public class ServerLogic {
 		
 		for (int client: groupMemberMap.get(gid).getCidSet()) {
 			if (clientSocketMap.containsKey(client)) {
+				System.out.println(">> Broadcast to client #" + client);
 				Connection.sendObject(clientSocketMap.get(client), response);
 			}
 		}
 		
 		forwardResponse(response);
+		
+		System.out.println("Transaction completed");
 	}
 	
 	private void updateClient(GetUpdateEvent event) {
-		System.out.println("Fetching data for " + event.getCid() + "...");
+		System.out.println("Fetching data for client #" + event.getCid() + "...");
 		Timestamp latest = event.getLatestTimestamp();
 		HashMap<Integer, Vector<NewMessageEvent>> unread = new HashMap<>();
 		
@@ -384,6 +426,8 @@ public class ServerLogic {
 			Connection.sendObject(clientSocketMap.get(event.getCid()), 
 					new UpdateTransferEvent(CSVHandler.readCSV(GROUP_DATA_PATH), unread));
 		} catch (Exception e) {}
+		
+		System.out.println("Transaction completed");
 	}
 	
 	private void addMember(Socket clientSocket, JoinGroupEvent event) {
@@ -394,9 +438,12 @@ public class ServerLogic {
 		int gid = event.getGid();
 		int cid = event.getCid();
 		
-		System.out.println(cid + " joining " + gid + "...");
+		System.out.println("client #" + cid + " joining group #" + gid);
 		
+		groupMemberMap.get(gid).addMember(cid);
 		groupLogMap.get(gid).addLog(cid, time, "JOIN");
+		
+		System.out.println("CHECKPOINT 1");
 		
 		Vector<Object> update = new Vector<>();
 		update.add(gid);
@@ -404,13 +451,23 @@ public class ServerLogic {
 		update.add(time.getTime());
 		update.add("JOIN");
 		
+		System.out.println("CHECKPOINT 2");
+		
 		CSVHandler.appendLineToCSV(GROUP_LOG_PATH, update);
+		
+		System.out.println("CHECKPOINT 3");
 		
 		GroupLogTransferEvent response = new GroupLogTransferEvent(gid, cid, time, "JOIN");
 		
+		System.out.println("CHECKPOINT 4");
+		
 		Connection.sendObject(clientSocket, response);
 		
+		System.out.println("CHECKPOINT 5");
+		
 		forwardResponse(response);
+		
+		System.out.println("Transaction completed");
 	}
 	
 	private void removeMember(Socket clientSocket, LeaveGroupEvent event) {
@@ -421,8 +478,9 @@ public class ServerLogic {
 		int gid = event.getGid();
 		int cid = event.getCid();
 		
-		System.out.println(cid + " leaving " + gid + "...");
+		System.out.println("client #" + cid + " leaving group #" + gid);
 		
+		groupMemberMap.get(gid).removeMember(cid);
 		groupLogMap.get(gid).addLog(cid, time, "LEAVE");
 		
 		Vector<Object> update = new Vector<>();
@@ -438,6 +496,8 @@ public class ServerLogic {
 		Connection.sendObject(clientSocket, response);
 		
 		forwardResponse(response);
+		
+		System.out.println("Transaction completed");
 	}
 	
 	private void sendServerFile(Socket clientSocket) {
@@ -450,6 +510,8 @@ public class ServerLogic {
 			
 			Connection.sendObject(clientSocket, response);
 		} catch (Exception e) {}
+		
+		System.out.println("Transaction completed");
 	}
 	
 	public static ServerLogic getInstance() {
