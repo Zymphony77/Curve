@@ -116,6 +116,13 @@ public class ServerLogic {
 	void retrieveGroupMessageData() {
 		System.out.println("Retrieving Group Message Data from the file...");
 		groupMessageMap = new HashMap<>();
+		
+		for (int gid: groupDataMap.keySet()) {
+			if (!groupMessageMap.containsKey(gid)) {
+				groupMessageMap.put(gid, new GroupMessageData(gid));
+			}
+		}
+		
 		try {
 			for (Vector<Object> message: CSVHandler.readCSV(GROUP_MESSAGE_DATA_PATH)) {
 				if (message.size() == 0) {
@@ -126,10 +133,6 @@ public class ServerLogic {
 				int cid = (Integer) message.elementAt(1);
 				Timestamp time = new Timestamp((long) message.elementAt(2));
 				String text = (String) message.elementAt(3);
-				
-				if (!groupMessageMap.containsKey(gid)) {
-					groupMessageMap.put(gid, new GroupMessageData(gid));
-				}
 				
 				groupMessageMap.get(gid).addMessage(cid, time, text);
 			}
@@ -143,6 +146,14 @@ public class ServerLogic {
 		System.out.println("Retrieving Group Log from the file...");
 		groupLogMap = new HashMap<>();
 		groupMemberMap = new HashMap<>();
+		
+		for (int gid: groupDataMap.keySet()) {
+			if (!groupLogMap.containsKey(gid)) {
+				groupLogMap.put(gid, new GroupLog(gid));
+				groupMemberMap.put(gid, new GroupMemberData(gid));
+			}
+		}
+		
 		try {
 			for (Vector<Object> log: CSVHandler.readCSV(GROUP_LOG_PATH)) {
 				if (log.size() == 0) {
@@ -401,25 +412,38 @@ public class ServerLogic {
 	
 	private void updateClient(GetUpdateEvent event) {
 		System.out.println("Fetching data for client #" + event.getCid() + "...");
+		
+		int cid = event.getCid();
 		Timestamp latest = event.getLatestTimestamp();
+		
 		HashMap<Integer, Vector<NewMessageEvent>> unread = new HashMap<>();
 		
+		System.out.println("CHECKPOINT 1");
+		
 		for (int gid: groupDataMap.keySet()) {
-			if (groupDataMap.containsKey(event.getCid())) {
+			System.out.print(">>> " + gid + "...\t\t");
+			
+			if (groupMemberMap.get(gid).getCidSet().contains(cid)) {
 				unread.put(gid, new Vector<>());
 			} else {
+				System.out.println("PASS");
 				continue;
 			}
 			
 			Vector<NewMessageEvent> unreadMessage = unread.get(gid);
 			
+			System.out.print("FOR\t");
+			
 			for (GroupMessageData.Message message: groupMessageMap.get(gid).getMessageVector()) {
+				System.out.println("EVER IN");
 				if (message.getTime().after(latest)) {
-					unreadMessage.add(new NewMessageEvent(gid, message.getCid(),
-							clientDataMap.get(message.getCid()).getClientName(),
+					unreadMessage.add(new NewMessageEvent(gid, cid,
+							clientDataMap.get(cid).getClientName(),
 							message.getTime(), message.getText()));
 				}
 			}
+			
+			System.out.println("DONE");
 		}
 		
 		try {
@@ -443,27 +467,17 @@ public class ServerLogic {
 		groupMemberMap.get(gid).addMember(cid);
 		groupLogMap.get(gid).addLog(cid, time, "JOIN");
 		
-		System.out.println("CHECKPOINT 1");
-		
 		Vector<Object> update = new Vector<>();
 		update.add(gid);
 		update.add(cid);
 		update.add(time.getTime());
 		update.add("JOIN");
 		
-		System.out.println("CHECKPOINT 2");
-		
 		CSVHandler.appendLineToCSV(GROUP_LOG_PATH, update);
-		
-		System.out.println("CHECKPOINT 3");
 		
 		GroupLogTransferEvent response = new GroupLogTransferEvent(gid, cid, time, "JOIN");
 		
-		System.out.println("CHECKPOINT 4");
-		
 		Connection.sendObject(clientSocket, response);
-		
-		System.out.println("CHECKPOINT 5");
 		
 		forwardResponse(response);
 		
