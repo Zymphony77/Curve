@@ -63,13 +63,25 @@ public class Server {
 			}
 		}).start();
 		
+		System.out.println("Starting server...");
+		
+		ServerLogic.getInstance();
+		
 		try {
+			if (IS_PRIMARY) {
+				serverSocket = new ServerSocket(PRIMARY_PORT);
+			} else {
+				serverSocket = new ServerSocket(SECONDARY_PORT);
+			}
+			
 			while(true) {
 				Socket clientSocket = serverSocket.accept();
 				System.out.println("New Connection from Client: " + clientSocket.getInetAddress());
 				new ServerThread(clientSocket);
 			}
-		} catch(IOException e) {}
+		} catch(IOException e) {
+			System.out.println("Server terminated");
+		}
 	}
 	
 	

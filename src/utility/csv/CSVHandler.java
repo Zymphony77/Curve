@@ -6,7 +6,13 @@ import java.util.*;
 public class CSVHandler {
 	private static Object convertType(String s) {
 		try {
-			return Integer.parseInt(s);
+			Long num = Long.parseLong(s);
+			
+			if (num.longValue() > Integer.MAX_VALUE) {
+				return num;
+			} else {
+				return Integer.parseInt(s);
+			}
 		} catch (Exception e) {
 			String t = new String(s);
 			t = t.replace("\"\"", "\"");
@@ -36,17 +42,17 @@ public class CSVHandler {
 				boolean inQuote = false;
 				int prev = 0;
 				
-				for (int i = 0; i <= line.length(); ++i) {
-					if (i == line.length()) {
-						String cell = line.substring(prev, i);
-						token.add(convertType(cell));
-					} else if (line.charAt(i) == ',' && !inQuote) {
+				for (int i = 0; i < line.length(); ++i) {
+					if (line.charAt(i) == ',' && !inQuote) {
 						token.add(convertType(line.substring(prev, i)));
 						prev = i + 1;
 					} else if (line.charAt(i) == '"') {
 						inQuote = !inQuote;
 					}
 				}
+				
+				String cell = line.substring(prev);
+				token.add(convertType(cell));
 				
 				data.add(token);
 			}
@@ -57,12 +63,26 @@ public class CSVHandler {
 		} catch (IOException e) {
 			System.out.println("IO Error");
 		}
-		
 		return data;
+	}
+	
+	public static void createFile(String file) {
+		try {
+			File dir = new File("data/");
+			if (!dir.exists()) {
+				dir.mkdir();
+			}
+			
+			File f = new File(file);
+			if (!f.exists()) {
+				f.createNewFile();
+			}
+		} catch (Exception e) {}
 	}
 	
 	private static void write​LineCSV(String file, Vector<Object> line, String sep, boolean append) {
 		try {
+			createFile(file);
 			BufferedWriter bw = new BufferedWriter(new FileWriter(file, append));
 			
 			String sentence = "";
@@ -71,8 +91,6 @@ public class CSVHandler {
 				if (i > 0) {
 					sentence += ",";
 				}
-				
-				System.out.println(">>> " + line.elementAt(i) + " " + line.elementAt(i).getClass());
 				
 				if (line.elementAt(i) instanceof Number) {
 					sentence += line.elementAt(i);
