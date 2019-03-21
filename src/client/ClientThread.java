@@ -28,19 +28,19 @@ public class ClientThread extends Thread {
 				// Function to handle receivedObj (request)
 				if (receivedObj instanceof NewClientEvent) {
 					ClientLogic.newClient((NewClientEvent) receivedObj);
-					//TODO Puwong 
+					//TODO Puwong cid cname
 
 				} else if (receivedObj instanceof NewGroupEvent) {
 					ClientLogic.newGroup((NewGroupEvent) receivedObj);
-					//TODO Puwong 
+					//TODO Puwong gid gname
 
 				} else if (receivedObj instanceof NewMessageEvent) {
 					ClientLogic.newMessage((NewMessageEvent) receivedObj);
-					//TODO Puwong 
+					//TODO Puwong gid cid ts strmsg cname
 
 				} else if (receivedObj instanceof UpdateTransferEvent) {
 					ClientLogic.updateTransfer((UpdateTransferEvent) receivedObj);
-					//TODO Puwong 
+					//TODO Puwong [groups(gid gname],[gid,(messages(gid cid ts strmsg cname))]
 
 				}
 					

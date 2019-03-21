@@ -2,6 +2,7 @@ package client;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Vector;
 
@@ -38,18 +39,26 @@ import utility.event.Event;
 public class ClientGUI extends Application {
     private String username;
     private int cid;
-    private int gid;
+    private int gid = 0;
     private ClientLogic client;
     private TextArea textChat;
     private TextArea textGroup;
-    private ListView<String> groupLstView;
-    private ObservableList<String> groupObservableLst;
-    private ArrayList<String> groupLst = new ArrayList<String>();
-    private ListView<Event> historyLstView;
-    private ObservableList<Event> historyObservableLst;
-    private ArrayList<String> history = new ArrayList<String>();
-
-    //private ListView<Group> GroupName;
+    private ListView<Group> groupLstView;
+    private ObservableList<Group> groupObservableLst;
+    private ArrayList<Group> groupLst = new ArrayList<Group>();
+    private ListView<Group> groupLstViewAll;
+    private ObservableList<Group> groupObservableLstAll;
+    private ArrayList<Group> groupLstAll = new ArrayList<Group>();
+    private ListView<Message> historyLstView;
+    private ObservableList<Message> historyObservableLst;
+    private ArrayList<Message> history = new ArrayList<Message>();
+    //test
+    private ArrayList<Message> test = new ArrayList<Message>();
+    //--
+    private Vector<Vector<Object>> groupOf = null;
+    private Vector<Vector<Object>> groupAll = null;
+    private String groupSelected = null;
+    
     
     
 	public ClientGUI(String username, int cid) {
@@ -137,19 +146,27 @@ public class ClientGUI extends Application {
 		    	joinGroupButton.setPrefSize(35, 35);
 		    	root.getChildren().add(joinGroupButton);
 		    	
+		    	Button leaveGroupButton = new Button("Leave");
+		    	leaveGroupButton.setLayoutX(340);
+		    	leaveGroupButton.setLayoutY(5);
+		    	leaveGroupButton.setText("Leave");
+		    	leaveGroupButton.setPrefSize(55, 10);
+		    	
+		    	
+		    	
 		    //	VBox groupLst = new VBox();
-		    	String fileName = "GroupOf" + cid + ".csv";
-		    	Vector<Vector<Object>> data;
-				try {
-					data = CSVHandler.readCSV(fileName);
-					for (int r = 0; r < data.size(); r++) {
-				    		groupObservableLst.add((String) data.get(r).get(1));
-			    		
-			    	}
-				} catch (FileNotFoundException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
-				}
+//		    	String fileName = "GroupOf" + cid + ".csv";
+//		    	Vector<Vector<Object>> data;
+//				try {
+//					data = CSVHandler.readCSV(fileName);
+//					for (int r = 0; r < data.size(); r++) {
+//				    		groupObservableLst.add((String) data.get(r).get(1));
+//			    		
+//			    	}
+//				} catch (FileNotFoundException e1) {
+//					// TODO Auto-generated catch block
+//					e1.printStackTrace();
+//				}
 			
 		 
 //		    	ScrollPane scrollPane = new ScrollPane(groupLst);
@@ -157,144 +174,223 @@ public class ClientGUI extends Application {
 //		    	scrollPane.setLayoutX(400);
 //		    	scrollPane.setLayoutY(5);
 //		    	root.getChildren().add(scrollPane);
-		    
-		    	groupLstView = new ListView<String>();
+			try {
+				groupAll = CSVHandler.readCSV("data/GroupLst.csv");
+			} catch (FileNotFoundException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			
+			try {
+				groupOf = CSVHandler.readCSV("data/GroupOf"+cid+".csv");
+			} catch (FileNotFoundException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			
+		    	groupLstView = new ListView<Group>();
 		    	groupLstView.setLayoutX(400);
 		    	groupLstView.setLayoutY(5);
-		    	groupLstView.setPrefSize(250, 390);
-		    groupObservableLst = FXCollections.observableArrayList();
+		    	groupLstView.setPrefSize(250, 195);
+         	for (Vector<Object> i : groupOf) {
+         		for(Vector<Object> j : groupAll) {
+         			if(i.get(0)==j.get(0)) {
+         				groupLst.add(new Group((int) i.get(0),(String) i.get(1)));
+         			}
+         				
+         		}
+        		}
+		    groupObservableLst = FXCollections.observableArrayList(groupLst);
 		    groupLstView.setItems(groupObservableLst);
 		    groupLstView.setStyle("");
 		    root.getChildren().add(groupLstView);
+		    
+		    
+		    groupLstViewAll = new ListView<Group>();
+	    		groupLstViewAll.setLayoutX(400);
+		    	groupLstViewAll.setLayoutY(205);
+		    	groupLstViewAll.setPrefSize(250, 190);
+         	for (int j = 0; j < groupAll.size(); j++) {
+         		groupLstAll.add(new Group((int) groupAll.get(j).get(0), (String) groupAll.get(j).get(1)));
+        		}
+		    groupObservableLstAll = FXCollections.observableArrayList(groupLstAll);
+		    groupLstViewAll.setItems(groupObservableLst);
+		    groupLstViewAll.setStyle("");
+		    root.getChildren().add(groupLstViewAll);
 	        
-		    historyLstView = new ListView<Event>();
+		    
+		    historyLstView = new ListView<Message>();
 		    historyLstView.setLayoutX(5);
 		    historyLstView.setLayoutY(35);
 		    historyLstView.setPrefSize(390, 360);
-	    		historyObservableLst = FXCollections.observableArrayList();
+		    //test
+		    Timestamp testTime = new Timestamp(1);
+		    test.add(new Message("Pooh", testTime, "Hello",0));
+		    test.add(new Message("Ppeiei", testTime, "OMG",0));
+		    //
+	    		historyObservableLst = FXCollections.observableArrayList(test);
 	    		historyLstView.setItems(historyObservableLst);
 	    		historyLstView.setStyle("");
 	    		root.getChildren().add(historyLstView);
 		    
-		    stage.setTitle("Curve");
-	    		stage.setScene(scene);
-	    		stage.setResizable(false);
 	    	
-	    		stage.show();
-	    	
-	    	groupLstView.setOnMouseClicked((arg0) -> {
-	                String groupName = groupLstView.getSelectionModel().getSelectedItem();
-	                Vector<Vector<Object>> temp;
-	                try {
-						temp = CSVHandler.readCSV("GroupLst.csv");
-						int gid = 0;
-		         		for (int i = 0; i < temp.size(); i++) {
-		         			if ((String) temp.get(i).get(1) == groupName) {
-		         				gid = (int) temp.get(i).get(0);
-		         				break;
-		         			}
-		         		}
-		         		 
-		                //displayMessage(gid);
-					} catch (FileNotFoundException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-	             }
-	    
-	     );
-	    	
-	    	
-	    	textChat.setOnKeyPressed(new EventHandler<KeyEvent>()
-	        {
-	            @Override
-	            public void handle(KeyEvent ke)
-	            {
-	                if (ke.getCode().equals(KeyCode.ENTER))
-	                {
-	                		client.SendMessage(cid,gid,textChat.getText());
-						textChat.clear();
-						ke.consume();
-	                }
-	            }
-	        });
-
-	    	  sendButton.setOnAction(new EventHandler<ActionEvent>() {
-	            	  @Override
-	                  public void handle(ActionEvent ee)
-	                  {
-	                      	client.SendMessage(cid,gid,textChat.getText());
-							textChat.clear();
-							ee.consume();
-	                      }
-	                  
-	          });
-	    	  
-	    	  newGroupButton.setOnAction(new EventHandler<ActionEvent>() {
-	        	  @Override
-	              public void handle(ActionEvent ee)
-	              {
-	                  	try {
-	  						client.CreateGroup(cid, textGroup.getText());
-	  	              		textGroup.clear();
-	  	              		ee.consume();
-	  					} catch (IOException e) {
-	  						// TODO Auto-generated catch block
-	  						e.printStackTrace();
-	  					}
-	                  }
-	              
-	      });
-	    	  
-	    	  joinGroupButton.setOnAction(new EventHandler<ActionEvent>() {
-	    		  public void handle(ActionEvent ee)
-	    		  {
-	    			  try {
-	    				  
-	    			  } catch (Exception e) {
-	    				  e.printStackTrace();
-	    			  }
-	    		  }
-	    	  });
-	    	  
-	    	  stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
-	              public void handle(WindowEvent we) {
-	                  System.exit(0);
-	              }
-	          });    
-		}
+		    	groupLstView.setOnMouseClicked((arg0) -> {
+		    				groupSelected = null;
+		                String groupName = groupLstView.getSelectionModel().getSelectedItem().getGroupName();
+		                Vector<Vector<Object>> temp;
+		                try {
+		                		root.getChildren().add(leaveGroupButton);
+							temp = CSVHandler.readCSV("src/utility/csv/GroupLst.csv");
+			         		for (int i = 0; i < temp.size(); i++) {
+			         			if ((String) temp.get(i).get(1) == groupName) {
+			         				gid = (int) temp.get(i).get(0);
+			         				groupLst.clear();
+			         				
+			         				groupObservableLst = FXCollections.observableArrayList(groupLst);
+			         				break;
+			         			}
+			         		}
+			         		 
+			                //displayMessage(gid);
+						} catch (FileNotFoundException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+		             }
+		    
+		     );
+		    	
+		    	groupLstViewAll.setOnMouseClicked((arg0) -> {
+	                groupSelected = groupLstViewAll.getSelectionModel().getSelectedItem().getGroupName();
+	                
+		    	});
+		    	
+		    	
+		    	textChat.setOnKeyPressed(new EventHandler<KeyEvent>()
+		        {
+		            @Override
+		            public void handle(KeyEvent ke)
+		            {
+		            		groupSelected = null;
+		                if (ke.getCode().equals(KeyCode.ENTER))
+		                {
+		                		if(gid!=0) {
+		                			ClientLogic.sendMessage(cid,gid,textChat.getText());
+								textChat.clear();
+								ke.consume();
+		                		}
+		                }
+		            }
+		        });
 	
+		    	 sendButton.setOnAction(new EventHandler<ActionEvent>() {
+		            	  @Override
+		                  public void handle(ActionEvent ee)
+		                  {
+		            		  	 groupSelected = null;
+		            		  	 if(gid!=0) {
+		                      	ClientLogic.sendMessage(cid,gid,textChat.getText());
+								textChat.clear();
+								ee.consume();
+		            		  	 }
+		                  }
+		                  
+		          });
+		    	  
+		    	 newGroupButton.setOnAction(new EventHandler<ActionEvent>() {
+		        	  @Override
+		              public void handle(ActionEvent ee)
+		              {
+		        		  		groupSelected = null;
+		                  	try {
+		                  		if(textGroup.getText()!="") {
+		                  			ClientLogic.createGroup(cid, textGroup.getText());
+			  	              		textGroup.clear();
+			  	              		ee.consume();
+		                  		}
+		  					} catch (Exception e) {
+		  						// TODO Auto-generated catch block
+		  						e.printStackTrace();
+		  					}
+		                  }
+		              
+		      });
+		    	  
+		    	 joinGroupButton.setOnAction(new EventHandler<ActionEvent>() {
+		    		  public void handle(ActionEvent ee)
+		    		  {
+		    			  try {
+		    				  if(gid!=0 && groupSelected!=null) {
+		    					  ClientLogic.join(cid, gid);
+			    				  textGroup.clear();
+			    				  ee.consume();
+		    				  }
+		    			  } catch (Exception e) {
+		    				  e.printStackTrace();
+		    			  }
+		    		  }
+		    	  });
+		    	 
+		    	 leaveGroupButton.setOnAction(new EventHandler<ActionEvent>() {
+		    		  public void handle(ActionEvent ee)
+		    		  {
+		    			  groupSelected = null;
+		    			  try {
+		    				  if(gid!=0) {
+		    					  ClientLogic.leave(cid, gid);
+			    				  textGroup.clear();
+			    				  ee.consume();
+		    				  }
+		    			  } catch (Exception e) {
+		    				  e.printStackTrace();
+		    			  }
+		    		  }
+		    	 });
+		    	  
+		    	 stage.setOnCloseRequest(new EventHandler<WindowEvent>() {
+		              public void handle(WindowEvent we) {
+		                  System.exit(0);
+		              }
+		     });
+		    	 
+		    	 stage.setTitle("Curve");
+		    	 stage.setScene(scene);
+		    	 stage.setResizable(false);
+		    	
+		    	 stage.show();
+		}
 		
 		// status = 0 is myself, status = 1 is other
-		public void displayMessage(){	
-			Platform.runLater(new Runnable(){
-				@Override
-				public void run() {
-					
-				}
-			});
-		}
-		
-		public void displayGroupLst(String Groupname) {
-			Platform.runLater(new Runnable(){
-				@Override
-				public void run() {
-					groupLstView = new ListView<String>();
-					groupLstView.setLayoutX(400);
-			    		groupLstView.setLayoutY(5);
-			    		groupLstView.setPrefSize(200, 390);
-			    		groupObservableLst = FXCollections.observableArrayList();
-			    		groupLstView.setItems(groupObservableLst);
-			    		groupLstView.setStyle("");
+		public void displayMessage(String username, String groupname, String message, Timestamp time, int status){
+			Message chat = new Message(username, time, message, status);
+			history.add(chat);
+			
+			historyObservableLst.clear();
+	    		historyObservableLst = FXCollections.observableArrayList(history);
+	    		historyLstView.setItems(historyObservableLst);
+	    		historyLstView.scrollTo(history.size()-1);
 	    		
-			    		groupLst.add(Groupname);
-				
-			    		groupObservableLst.clear();
-			    		groupObservableLst = FXCollections.observableArrayList(groupLst);
-			    		groupLstView.setItems(groupObservableLst);	
-			    		groupLstView.scrollTo(groupLst.size()-1); 
-				}
-			});
 		}
-	
+
+		public void addGroupLst(int cid , int gid, String groupname) {
+			groupLst.add(new Group(gid, groupname));
+			
+			groupObservableLst.clear();
+			groupObservableLst = FXCollections.observableArrayList(groupLst);
+			groupLstView.setItems(groupObservableLst);
+		}
+
+		public void deleteGroupLst(int cid, int gid, String groupName) {
+			for(int i=0;i<groupLst.size();i++) {
+				if(groupLst.get(i).getGid()==gid) {
+					groupLst.remove(groupLst.get(i));
+					break;
+				}
+			}
+			
+			groupObservableLst.clear();
+			groupObservableLst = FXCollections.observableArrayList(groupLst);
+			groupLstView.setItems(groupObservableLst);
+			
+		}
 }

@@ -19,8 +19,8 @@ import java.net.Socket;
 import java.util.*;
 
 
-import Client.ClientGUI;
-import Client.ClientLogic;
+import client.ClientGUI;
+import client.ClientLogic;
 
 import connection.*;
 import server.*;
@@ -108,7 +108,8 @@ public class Main extends Application {
 	}
 	
 	public void test() throws Exception {
-		ClientGUI gui = new ClientGUI("Pooh", 123);
+		stage.hide();
+		ClientGUI gui = new ClientGUI("Pooh", 10);
 		gui.start(new Stage());
 	}
 	
@@ -120,7 +121,7 @@ public class Main extends Application {
 				ClientGUI gui = new ClientGUI(username_field.getText(), (int) data.get(i).get(0));
 				gui.start(new Stage());
 		}else {
-			//ClientLogic.CreateClient(username_field.getText());
+			ClientLogic.createClient(username_field.getText());
 			ClientGUI gui = new ClientGUI(username_field.getText(), (int) data.get(data.size()-1).get(0));
 			gui.start(new Stage());
 		}}
