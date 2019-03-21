@@ -12,6 +12,7 @@ public class Client {
 	
 	public static void main(String[] args) {
 		clientLogic = ClientLogic.getInstance();
+		
 		ClientThread c = new ClientThread(clientLogic.getSocket());
 		
 		while(true) {
