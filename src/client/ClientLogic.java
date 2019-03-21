@@ -1,4 +1,4 @@
-package client;
+package Client;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;

@@ -1,8 +1,4 @@
-/client/
-/connection/
-/model/
-/server/
-/utility/
 /Client/
 /application/
-/tmp/
+/client/
+/server/
