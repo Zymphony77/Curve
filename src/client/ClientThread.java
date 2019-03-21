@@ -6,6 +6,10 @@ import java.io.*;
 import client.*;
 import connection.Connection;
 import utility.event.Event;
+import utility.event.NewClientEvent;
+import utility.event.NewGroupEvent;
+import utility.event.NewMessageEvent;
+import utility.event.UpdateTransferEvent;
 
 public class ClientThread extends Thread {
 	
@@ -22,7 +26,24 @@ public class ClientThread extends Thread {
 			
 			synchronized (ClientLogic.getInstance()) {
 				// Function to handle receivedObj (request)
-				ClientLogic.handleReceivedObj((Event)receivedObj);
+				if (receivedObj instanceof NewClientEvent) {
+					ClientLogic.newClient((NewClientEvent) receivedObj);
+					//TODO Puwong 
+
+				} else if (receivedObj instanceof NewGroupEvent) {
+					ClientLogic.newGroup((NewGroupEvent) receivedObj);
+					//TODO Puwong 
+
+				} else if (receivedObj instanceof NewMessageEvent) {
+					ClientLogic.newMessage((NewMessageEvent) receivedObj);
+					//TODO Puwong 
+
+				} else if (receivedObj instanceof UpdateTransferEvent) {
+					ClientLogic.updateTransfer((UpdateTransferEvent) receivedObj);
+					//TODO Puwong 
+
+				}
+					
 			}
 		}
 	}

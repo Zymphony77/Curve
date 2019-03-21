@@ -1,9 +1,5 @@
-/.classpath
-/.project
-/Client/
-/application/
-/server/
-/utility/
+/client/
 /connection/
 /model/
-/client/
+/server/
+/utility/

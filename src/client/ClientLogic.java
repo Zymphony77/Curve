@@ -31,32 +31,18 @@ import server.*;
 public class ClientLogic {
 	private final static ClientLogic instance = new ClientLogic();
 	private static Socket socket;
-	private final static String PRIMARY_SERVER_IP=Server.PRIMARY_IP;
-	private final static int PRIMARY_PORT=Server.PRIMARY_PORT;
-	private final static String SECONDARY_SERVER_IP=Server.SECONDARY_IP;
-	private final static int SECONDARY_PORT=Server.SECONDARY_PORT;
-	
+	private final static String PRIMARY_SERVER_IP = Server.PRIMARY_IP;
+	private final static int PRIMARY_PORT = Server.PRIMARY_PORT;
+	private final static String SECONDARY_SERVER_IP = Server.SECONDARY_IP;
+	private final static int SECONDARY_PORT = Server.SECONDARY_PORT;
+
 	public ClientLogic() {
 		socket = Connection.connectToServer(PRIMARY_SERVER_IP, PRIMARY_PORT);
+	//  TODO Po: auto reconnection
 	}
-	
 
 	public static ClientLogic getInstance() {
 		return instance;
-	}
-
-	// Handle receivedObj
-	public static void handleReceivedObj(Event receivedObj) {
-
-		if (receivedObj instanceof NewClientEvent) {
-			newClient((NewClientEvent) receivedObj);
-		} else if (receivedObj instanceof NewGroupEvent) {
-			newGroup((NewGroupEvent) receivedObj);
-		} else if (receivedObj instanceof NewMessageEvent) {
-			newMessage((NewMessageEvent) receivedObj);
-		} else if (receivedObj instanceof UpdateTransferEvent) {
-			updateTransfer((UpdateTransferEvent) receivedObj);
-		}
 	}
 
 	// Create Client
@@ -73,14 +59,15 @@ public class ClientLogic {
 		Vector<Vector<Object>> data = new Vector<Vector<Object>>();
 		Vector<Object> client = new Vector<Object>(newClient.getCid());
 		client.addElement(newClient.getClientName());
-		
+
 		String ipAddress = "cannot work";
 		client.addElement(ipAddress);
 		data.add(client);
 		CSVHandler.writeCSV("Client.csv", data);
 
 		// TODO add function to tell UI
-		UILogic.addNewClient(newClient.getCid(),newClient.getClientName()); //temporary name
+//		UILogic.addNewClient(newClient.getCid(), newClient.getClientName()); // temporary name
+//		return true;
 	}
 
 	// Connecting
@@ -138,7 +125,8 @@ public class ClientLogic {
 		CSVHandler.appendToCSV(fileName, data);
 
 		// TODO add function to tell UI
-		UILogic.addJoinGroup(cid,gid);
+//		UILogic.addJoinGroup(cid, gid);
+//		return true;
 	}
 
 	// send
@@ -148,7 +136,7 @@ public class ClientLogic {
 	}
 
 	// receive
-	public static void newGroup(NewGroupEvent newGroup) {
+	public static boolean newGroup(NewGroupEvent newGroup) {
 		Vector<Vector<Object>> data = new Vector<Vector<Object>>();
 		Vector<Object> group = new Vector<Object>(newGroup.getGid());
 		group.addElement(newGroup.getGroupName());
@@ -156,7 +144,8 @@ public class ClientLogic {
 		CSVHandler.appendToCSV("GroupList.csv", data);
 
 		// TODO add function to tell UI
-		UILogic.addNewGroup(gid,groupName);
+//		UILogic.addNewGroup(gid, groupName);
+		return true;
 	}
 
 	// Message Event
@@ -186,52 +175,41 @@ public class ClientLogic {
 		CSVHandler.appendToCSV(fileName, data);
 
 		// TODO add function to tell UI
-		UILogic.addNewMessage(newMessage.getGid(),newMessage.getCid(),newMessage.getClientName(),newMessage.getTime(),newMessage.getMessage());
-		
+//		UILogic.addNewMessage(newMessage.getGid(), newMessage.getCid(), newMessage.getClientName(),
+//				newMessage.getTime(), newMessage.getMessage());
+//		return true;
+
 	}
 
 	// Update Event
 	public static void updateTransfer(UpdateTransferEvent updateTransfer) {
-		Vector<Vector<Object>> groupData = updateTransfer.getGroupData(); //  group Ẻ� csv
-		HashMap<Integer, Vector<NewMessageEvent>> unread = updateTransfer.getUnread(); //
+		Vector<Vector<Object>> groupData = updateTransfer.getGroupData();
+		HashMap<Integer, Vector<NewMessageEvent>> unread = updateTransfer.getUnread();
 
-		CSVHandler.appendToCSV("GroupList.csv", groupData);
+		CSVHandler.writeCSV("GroupList.csv", groupData);
 
-		for (NewMessageEvent m: unread) {
-			int gid = m.getGid();
-			int cid = m.getCid();
-			String ClientName = m.getClientName();
-			Timestamp time = m.getTime();
-			String text = m.getMessage();
-			UILogic.addNewMessage(gid,cid,ClientName,time,text);
+		for (int i : unread.keySet()) {
+			for (NewMessageEvent m : unread.get(i)) {
+				int gid = m.getGid();
+				int cid = m.getCid();
+				String ClientName = m.getClientName();
+				Timestamp time = m.getTime();
+				String text = m.getMessage();
 
-			Vector<Vector<Object>> data = new Vector<Vector<Object>>();
-			Vector<Object> message = new Vector<Object>();
-			
-			message.addElement(ClientName);
-			message.addElement(time);
-			message.addElement(text);
-			data.add(message);
-			String fileName = "MessageListOf" + gid + ".csv";
-			CSVHandler.appendToCSV(fileName, data);
+				Vector<Vector<Object>> data = new Vector<Vector<Object>>();
+				Vector<Object> message = new Vector<Object>();
+
+				message.addElement(ClientName);
+				message.addElement(time);
+				message.addElement(text);
+				data.add(message);
+				String fileName = "MessageListOf" + gid + ".csv";
+				CSVHandler.appendToCSV(fileName, data);
+
+//				UILogic.addNewMessage(gid, cid, ClientName, time, text);
 			}
 		}
-
-		// TODO add function to tell UI
-	}
-
-	public static void groupLogTransfer(GroupLogTransferEvent groupLogTransfer) {
-		int gid = groupLogTransfer.getGid();
-		int cid = groupLogTransfer.getCid();
-		Timestamp time = groupLogTransfer.getTime();
-		String event = groupLogTransfer.getEvent();
-
-		// TODO add function to tell UI
-	}
-
-	public static void notifyUI(Event event) {
-
-		// TODO
+//		return true;
 	}
 
 	public Socket getSocket() {
