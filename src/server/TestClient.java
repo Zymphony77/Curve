@@ -19,8 +19,15 @@ public class TestClient {
 	public static void main(String[] args) {
 		Scanner sc = new Scanner(System.in);
 		
+		System.out.println("Connect to...? [1] PrimaryServer | [2] SecondaryServer");
+		int connectMode = sc.nextInt();
+		
 		try {
-			clientSocket = new Socket(Server.PRIMARY_IP, Server.PRIMARY_PORT);
+			if (connectMode == 1) {
+				clientSocket = new Socket(Server.PRIMARY_IP, Server.PRIMARY_PORT);
+			} else {
+				clientSocket = new Socket(Server.SECONDARY_IP, Server.SECONDARY_PORT);
+			}
 		} catch (Exception e) {
 			System.out.println("Server cannot be reached!");
 			sc.close();

@@ -32,7 +32,7 @@ public class ServerLogic {
 	////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	private ServerLogic() {
-		System.out.println((new Date()).getTime());
+		while (!Server.startInitialization);
 		
 		System.out.print("Initiating ");
 		System.out.print(Server.IS_PRIMARY ? "Primary" : "Secondary");

@@ -19,8 +19,25 @@ public class Server {
 
 	static Thread syncThread = null;
 	static boolean threadClosed = false;
+	static boolean startInitialization = false;
 	
 	public static void main(String[] args) {
+		if (args.length == 1) {
+			if (args[0].equals("PRIMARY")) {
+				IS_PRIMARY = true;
+			} else if (args[0].equals("SECONDARY")) {
+				IS_PRIMARY = false;
+			} else {
+				System.out.println("Usage: java server/Server [PRIMARY/SECONDARY]");
+				return;
+			}
+		} else {
+			System.out.println("Usage: java server/Server [PRIMARY/SECONDARY]");
+			return;
+		}
+		
+		startInitialization = true;
+		
 		// Run when the program is closed
 		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
 		    public void run() {
@@ -83,6 +100,5 @@ public class Server {
 			System.out.println("Server terminated");
 		}
 	}
-	
 	
 }
