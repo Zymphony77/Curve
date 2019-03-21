@@ -98,7 +98,7 @@ public class TestClientLogic {
 
 	public static void main(String[] args) throws FileNotFoundException {
 		// TODO Auto-generated method stub
-		/*
+		
 		System.out.println("Start Test New Client . . .");
 		testNewClient();
 
@@ -120,11 +120,8 @@ public class TestClientLogic {
 		testUpdateTransfer();
 
 		System.out.println("------ TEST FINISHED ------");
-		/*
-		 * 
-		 */
 
-		testLeaveGroup();
+//		testLeaveGroup();
 	}
 
 }
