@@ -11,20 +11,23 @@ import client.ClientLogic;
 public class TestClientLogic {
 
 	public static void testNewClient() {
-		NewClientEvent newClient = new NewClientEvent(1,"TestClient");
+		NewClientEvent newClient = new NewClientEvent(1,"Client#1");
 		Vector<Object> test = ClientLogic.newClient(newClient);
 		System.out.println(test);
 	}
 	public static void testNewGroup() {
-		NewGroupEvent newGroup = new NewGroupEvent(11,"Testgroup");
+		NewGroupEvent newGroup = new NewGroupEvent(11,"Group#11");
 		Vector<Object> test = ClientLogic.newGroup(newGroup);
 		System.out.println(test);
 	}
 	public static void testNewMessage() {
 		Timestamp testTime = new Timestamp((new Date()).getTime());
-		NewMessageEvent newMessage = new NewMessageEvent(1,11,"TestClient",testTime,"TestMessage");
-		Vector<Object> test = ClientLogic.newMessage(newMessage);
-		System.out.println(test);
+		NewMessageEvent newMessage = new NewMessageEvent(1,11,"Client#1",testTime,"Message1 from Client#1 to Group#11");
+		Vector<Object> newMessageVector = ClientLogic.newMessage(newMessage);
+				  testTime = new Timestamp((new Date()).getTime());
+						newMessage = new NewMessageEvent(1,11,"Client#1",testTime,"Message2 from Client#1 to Group#11");
+					   newMessageVector.add(newMessage);
+		System.out.println(newMessageVector);
 	}
 	
 	public static void testUpdateTransfer() {		

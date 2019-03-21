@@ -36,7 +36,7 @@ public class ClientLogic {
 	private final static int PRIMARY_PORT = Server.PRIMARY_PORT;
 	private final static String SECONDARY_SERVER_IP = Server.SECONDARY_IP;
 	private final static int SECONDARY_PORT = Server.SECONDARY_PORT;
-	private final static String FILEPATH = "src/utility/csv/";
+	private final static String FILEPATH = "data/csv/";
 
 	public ClientLogic() {
 		socket = Connection.connectToServer(PRIMARY_SERVER_IP, PRIMARY_PORT);
@@ -64,7 +64,7 @@ public class ClientLogic {
 		client.addElement(newClient.getCid());
 		client.addElement(newClient.getClientName());
 		Timestamp currentTime = new Timestamp((new Date()).getTime());
-		client.addElement(currentTime.getTime());
+		client.addElement((long)currentTime.getTime());
 
 		// String ipAddress = "cannot work";
 		// client.addElement(ipAddress);
@@ -113,7 +113,7 @@ public class ClientLogic {
 		group.addElement(gid);
 		group.addElement(groupName);
 		data.add(group);
-		String fileName = "GroupOf" + cid + ".csv";
+		String fileName = FILEPATH + "GroupOf" + cid + ".csv";
 		CSVHandler.appendToCSV(fileName, data);
 
 		// TODO add function to tell UI
@@ -144,7 +144,7 @@ public class ClientLogic {
 		Vector<Object> group = new Vector<Object>();
 		group.addElement(gid);
 		data.add(group);
-		String fileName = "GroupOf" + cid + ".csv";
+		String fileName = FILEPATH + "GroupOf" + cid + ".csv";
 		CSVHandler.appendToCSV(fileName, data);
 
 		// TODO add function to tell UI
@@ -204,7 +204,7 @@ public class ClientLogic {
 		String fileName = FILEPATH+"MessageListOf" + newMessage.getGid() + ".csv";
 		CSVHandler.appendToCSV(fileName, data);
 
-		Timestamp currentTime = new Timestamp((new Date()).getTime());
+		Long currentTime = time;
 		String clientFileName = FILEPATH+"Client.csv";
 		Vector<Vector<Object>> oldClientList;
 		try {
