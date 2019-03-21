@@ -393,6 +393,14 @@ public class ServerLogic {
 		Timestamp currentTime = new Timestamp((new Date()).getTime());
 		String text = event.getMessage();
 		
+		Vector<Object> update = new Vector<>();
+		update.add(gid);
+		update.add(cid);
+		update.add(currentTime.getTime());
+		update.add(text);
+		
+		CSVHandler.appendLineToCSV(GROUP_MESSAGE_DATA_PATH, update);
+		
 		groupMessageMap.get(gid).addMessage(cid, currentTime, text);
 		
 		NewMessageEvent response = new NewMessageEvent(gid, cid, clientDataMap.get(cid).getClientName(), 
@@ -437,7 +445,7 @@ public class ServerLogic {
 			for (GroupMessageData.Message message: groupMessageMap.get(gid).getMessageVector()) {
 				System.out.println("EVER IN");
 				if (message.getTime().after(latest)) {
-					unreadMessage.add(new NewMessageEvent(gid, cid,
+					unreadMessage.add(new NewMessageEvent(gid, message.getCid(),
 							clientDataMap.get(cid).getClientName(),
 							message.getTime(), message.getText()));
 				}
@@ -481,6 +489,9 @@ public class ServerLogic {
 		
 		forwardResponse(response);
 		
+		updateMessage(new SendMessageEvent(cid, gid, 
+				clientDataMap.get(cid).getClientName() + " joined the group."));
+		
 		System.out.println("Transaction completed");
 	}
 	
@@ -510,6 +521,9 @@ public class ServerLogic {
 		Connection.sendObject(clientSocket, response);
 		
 		forwardResponse(response);
+		
+		updateMessage(new SendMessageEvent(cid, gid, 
+				clientDataMap.get(cid).getClientName() + " left the group."));
 		
 		System.out.println("Transaction completed");
 	}
