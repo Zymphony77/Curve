@@ -31,10 +31,10 @@ import server.*;
 public class ClientLogic {
 	private final static ClientLogic instance = new ClientLogic();
 	private static Socket socket;
-	private final static String PRIMARY_SERVER_IP=ServerLogic.getPrimaryServerIp();
-	private final static int PRIMARY_PORT=ServerLogic.getPrimaryPort();
-	private final static String SECONDARY_SERVER_IP=ServerLogic.getSecondaryServerIp();
-	private final static int SECONDARY_PORT=ServerLogic.getSecondaryPort();
+	private final static String PRIMARY_SERVER_IP=Server.PRIMARY_IP;
+	private final static int PRIMARY_PORT=Server.PRIMARY_PORT;
+	private final static String SECONDARY_SERVER_IP=Server.SECONDARY_IP;
+	private final static int SECONDARY_PORT=Server.SECONDARY_PORT;
 	
 	public ClientLogic() {
 		socket = Connection.connectToServer(PRIMARY_SERVER_IP, PRIMARY_PORT);
@@ -193,26 +193,28 @@ public class ClientLogic {
 	// Update Event
 	public static void updateTransfer(UpdateTransferEvent updateTransfer) {
 		Vector<Vector<Object>> groupData = updateTransfer.getGroupData(); //  group Ẻ� csv
-		HashMap<Integer, GroupMessageData> unread = updateTransfer.getUnread(); //
+		HashMap<Integer, Vector<NewMessageEvent>> unread = updateTransfer.getUnread(); //
 
 		CSVHandler.appendToCSV("GroupList.csv", groupData);
 
-		for (Integer i : unread.keySet()) {
-			GroupMessageData groupMessageData = unread.get(i);
-			int gid = groupMessageData.getGid();
-			Vector<Message> messageVector = groupMessageData.getMessageVector();
+		for (NewMessageEvent m: unread) {
+			int gid = m.getGid();
+			int cid = m.getCid();
+			String ClientName = m.getClientName();
+			Timestamp time = m.getTime();
+			String text = m.getMessage();
+			UILogic.addNewMessage(gid,cid,ClientName,time,text);
 
 			Vector<Vector<Object>> data = new Vector<Vector<Object>>();
-			for (Message m : messageVector) {
-				Vector<Object> message = new Vector<Object>();
-				message.addElement(m.getCid());
-				message.addElement(m.getTime());
-				message.addElement(m.getText());
-				data.add(message);
-				UILogic.addNewMessage(gid,m.getCid(),m.getClientName(),m.getTime(),m.getText());
-			}
+			Vector<Object> message = new Vector<Object>();
+			
+			message.addElement(ClientName);
+			message.addElement(time);
+			message.addElement(text);
+			data.add(message);
 			String fileName = "MessageListOf" + gid + ".csv";
 			CSVHandler.appendToCSV(fileName, data);
+			}
 		}
 
 		// TODO add function to tell UI
