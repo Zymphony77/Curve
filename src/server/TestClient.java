@@ -63,10 +63,22 @@ public class TestClient {
 				} else if (response instanceof UpdateTransferEvent) {
 					UpdateTransferEvent r = (UpdateTransferEvent) response;
 					System.out.println("--> [UpdateTransferEvent]");
+					
 					System.out.println("\tGroupData: ");
 					for (Vector<Object> group: r.getGroupData()) {
 						for (Object data: group) {
 							System.out.print(data + "\t");
+						}
+						System.out.println();
+					}
+					
+					System.out.println("\n\tUnreadData: ");
+					for (int gid: r.getUnread().keySet()) {
+						System.out.println("--> " + gid);
+						for (NewMessageEvent data: r.getUnread().get(gid)) {
+							System.out.println("Client #" + data.getCid() +
+									"\t@Time " + data.getTime() +
+									"\n\tMessage: " + data.getMessage());
 						}
 						System.out.println();
 					}
@@ -89,6 +101,10 @@ public class TestClient {
 			case 0:		// [Locally] Set cid
 				System.out.print("Cid: ");
 				cid = sc.nextInt();
+				if (cid <= 0) {
+					System.out.println(">> cid starts from 1");
+					cid = -1;
+				}
 				break;
 			case 1:		// ConnectEvent
 				System.out.println("Connecting...");
@@ -115,16 +131,28 @@ public class TestClient {
 			case 6:		// JoinGroupEvent
 				System.out.print("Gid: ");
 				gid = sc.nextInt();
+				if (gid <= 0) {
+					System.out.println(">> gid starts from 1");
+					break;
+				}
 				Connection.sendObject(clientSocket, new JoinGroupEvent(cid, gid));
 				break;
 			case 7: 	// LeaveGroupEvent
 				System.out.print("Gid: ");
 				gid = sc.nextInt();
+				if (gid <= 0) {
+					System.out.println(">> gid starts from 1");
+					break;
+				}
 				Connection.sendObject(clientSocket, new LeaveGroupEvent(cid, gid));
 				break;
 			case 8:		// SendMessageEvent
 				System.out.print("Gid: ");
 				gid = sc.nextInt();
+				if (gid <= 0) {
+					System.out.println(">> gid starts from 1");
+					break;
+				}
 				System.out.print("Text: ");
 				String text = sc.next();
 				Connection.sendObject(clientSocket, new SendMessageEvent(cid, gid, text));
