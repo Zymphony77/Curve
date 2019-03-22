@@ -38,6 +38,7 @@ public class ClientLogic {
 
 	public ClientLogic() {
 		reconnect();
+		connect(cid);
 	}
 	
 	public void reconnect() {
@@ -80,7 +81,7 @@ public class ClientLogic {
 	}
 
 	// Connection Send
-	public void connect(int cid, String ipAddress) {
+	public void connect(int cid) {
 		ConnectEvent connect = new ConnectEvent(cid);
 		Connection.sendObject(socket, connect);
 	}

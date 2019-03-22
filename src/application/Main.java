@@ -49,6 +49,7 @@ public class Main extends Application {
 			data = CSVHandler.readCSV(FILEPATH + "ClientInfo.csv");
 			System.out.println(data);
 			gui = new ClientGUI((String) data.get(0).get(1), (int) data.get(0).get(0));
+			clientLogic.setCid((int)data.get(0).get(0));
 			//ClientLogic.createClient((String) data.get(0).get(1));
 			gui.start(new Stage());
 			
@@ -151,10 +152,7 @@ public class Main extends Application {
 			data = CSVHandler.readCSV(FILEPATH + "ClientInfo.csv");
 			gui = new ClientGUI(username_field.getText(), (int) data.get(0).get(0));
 			gui.start(new Stage());
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		} catch (FileNotFoundException e) {}
 	}
 	
 	public static void main(String[] args) {

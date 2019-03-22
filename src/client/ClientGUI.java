@@ -285,7 +285,7 @@ public class ClientGUI extends Application {
 		                Vector<Vector<Object>> temp;
 		                try {
 		                		root.getChildren().add(leaveGroupButton);
-							temp = CSVHandler.readCSV("src/utility/csv/GroupLst.csv");
+							temp = CSVHandler.readCSV(Main.FILEPATH + "GroupLst.csv");
 			         		for (int i = 0; i < temp.size(); i++) {
 			         			if ((String) temp.get(i).get(1) == groupName) {
 			         				gid = (int) temp.get(i).get(0);
@@ -293,7 +293,7 @@ public class ClientGUI extends Application {
 			         			}
 			         		}
 			         		 
-			                //displayMessage(gid);
+			                showChat(gid);
 						} catch (FileNotFoundException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
@@ -343,6 +343,7 @@ public class ClientGUI extends Application {
 		        	  @Override
 		              public void handle(ActionEvent ee)
 		              {
+		        		  		System.out.println("IN");
 		        		  		groupSelected = null;
 		                  	try {
 		                  		if(textGroup.getText()!="") {
@@ -403,17 +404,17 @@ public class ClientGUI extends Application {
 		    	 stage.show();
 		}
 
-		public void displayMessage(String username, Timestamp time, String message, boolean status){
-			
-			Message chat = new Message(username, time, message, status);
-			history.add(chat);
-			
-			historyObservableLst.clear();
-	    		historyObservableLst = FXCollections.observableArrayList(history);
-	    		historyLstView.setItems(historyObservableLst);
-	    		historyLstView.scrollTo(history.size()-1);
-	    		
-		}
+//		public void displayMessage(String username, Timestamp time, String message, boolean status){
+//			
+//			Message chat = new Message(username, time, message, status);
+//			history.add(chat);
+//			
+//			historyObservableLst.clear();
+//	    		historyObservableLst = FXCollections.observableArrayList(history);
+//	    		historyLstView.setItems(historyObservableLst);
+//	    		historyLstView.scrollTo(history.size()-1);
+//	    		
+//		}
 
 		public void addGroupLst(int gid, String groupname) {
 			System.out.println("add group");
@@ -447,7 +448,61 @@ public class ClientGUI extends Application {
 		}
 		 
 		
-//		public void updateTransfer() {
-//			
-//		}
+		public void showChat(int gid) {
+			if(OldMessages.containsKey(gid)) {
+				Vector<NewMessageEvent> temp = UnreadMessages.get(gid);
+				for(NewMessageEvent i : temp) {
+					OldMessages.get(gid).add(i);
+				}
+			Vector<NewMessageEvent> temp2 = OldMessages.get(gid);
+			for(NewMessageEvent i:temp) {
+				boolean status;
+				if(i.getCid()==cid) {
+					status = true;
+				}else {
+					status = false;
+				}	
+				Message message = new Message(i.getClientName(),i.getTime(),i.getMessage(),status);
+				history.add(message);
+			}
+			
+			historyObservableLst.clear();
+	    		historyObservableLst = FXCollections.observableArrayList(history);
+	    		historyLstView.setItems(historyObservableLst);
+	    		historyLstView.scrollTo(history.size()-1);
+			}else {
+				System.out.println("Bugggggggg!!!");
+				historyObservableLst.clear();
+	    			historyObservableLst = FXCollections.observableArrayList();
+	    			historyLstView.setItems(historyObservableLst);
+			}
+		}
+		
+		public void addOldMessage(NewMessageEvent message) {
+			if(OldMessages.containsKey(message.getGid())) {
+				Vector<NewMessageEvent> temp = OldMessages.get(message.getGid());
+				temp.add(message);
+				showChat(message.getGid());
+			}else {
+				Vector<NewMessageEvent> temp = new Vector<>();
+				temp.add(message);
+				OldMessages.put(message.getGid(), temp);
+				
+			}
+			
+		}
+		
+		public void addToUnreadMessage(NewMessageEvent message) {
+			if(UnreadMessages.containsKey(message.getGid())){
+				Vector<NewMessageEvent> temp = UnreadMessages.get(message.getGid());
+				temp.add(message);
+			}else {
+				Vector<NewMessageEvent> temp = new Vector<>();
+				temp.add(message);
+				UnreadMessages.put(message.getGid(), temp);
+			}
+			
+		}
+		
+		
 }

@@ -46,8 +46,9 @@ public class ClientThread extends Thread {
 					Main.isConected = true;
 
 				} else if (receivedObj instanceof NewGroupEvent) {
+					System.out.println("ININ");
 					Vector<Object> newGroup = ClientLogic.getInstance().newGroup((NewGroupEvent) receivedObj);
-//					Main.getGui().addGroupLst((int) newGroup.get(0), (String) newGroup.get(1));
+					Main.getGui().addGroupLst((int) newGroup.get(0), (String) newGroup.get(1));
 					
 					NewGroupEvent r = (NewGroupEvent) receivedObj;
 					System.out.println("--> [NewGroupEvent]");
@@ -67,9 +68,13 @@ public class ClientThread extends Thread {
 						newMessage = ClientLogic.getInstance().newMessage((NewMessageEvent) receivedObj);
 					} catch (FileNotFoundException e) {}
 					
-//					if (Main.getGui().getGid() == r.getGid())
+					if (Main.getGui().getGid() == r.getGid()) {
+						Main.getGui().addOldMessage(r);
+					}else {
+						Main.getGui().addToUnreadMessage(r);
+					}
 						
-//					Main.getGui().displayMessage((String) newMessage.get(1), new Timestamp((long) newMessage.get(2)), (String) newMessage.get(3), r.getCid() == ClientLogic.getInstance().getCid());
+					//Main.getGui().showChat(((NewMessageEvent) receivedObj).getGid(), );
 
 				} else if (receivedObj instanceof UpdateTransferEvent) {
 					ClientLogic.getInstance().updateTransfer((UpdateTransferEvent) receivedObj);
