@@ -55,8 +55,6 @@ public class ClientThread extends Thread {
 					System.out.println("\tGid: " + r.getGid() + 
 							"\n\tGroupName: " + r.getGroupName());
 				} else if (receivedObj instanceof NewMessageEvent) {
-					Vector<Object> newMessage = null;
-					
 					NewMessageEvent r = (NewMessageEvent) receivedObj;
 					System.out.println("--> [NewMessageEvent]");
 					System.out.println("\tGid: " + r.getGid() + 
@@ -65,7 +63,7 @@ public class ClientThread extends Thread {
 							"\n\tTime:" + r.getTime() +
 							"\n\tText: " + r.getMessage());
 					try {
-						newMessage = ClientLogic.getInstance().newMessage((NewMessageEvent) receivedObj);
+						ClientLogic.getInstance().newMessage((NewMessageEvent) receivedObj);
 					} catch (FileNotFoundException e) {}
 					
 					if (Main.getGui().getGid() == r.getGid()) {

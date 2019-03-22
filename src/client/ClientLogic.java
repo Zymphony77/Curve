@@ -38,7 +38,10 @@ public class ClientLogic {
 
 	public ClientLogic() {
 		reconnect();
-		connect(cid);
+//		if(cid > 0) {
+//			System.out.println(cid);
+//			connect(cid);
+//		}
 	}
 	
 	public void reconnect() {
@@ -96,12 +99,15 @@ public class ClientLogic {
 	public Vector<Object> createGroup(int cid, String groupName) throws FileNotFoundException {
 		CreateGroupEvent createGroup = new CreateGroupEvent(cid, groupName);
 		instance.lastCreatedGid = 0;
+		System.out.println("aaa");
 		Connection.sendObject(socket, createGroup); // FOR TEST
+		System.out.println("bbb");
 		while(instance.lastCreatedGid == 0) {
 			try {
 				Thread.sleep(100);
 			} catch (InterruptedException e) {}
 		}
+		System.out.println("ccc");
 		Vector<Vector<Object>> data = CSVHandler.readCSV(FILEPATH + "GroupLst.csv");
 		data = new Vector<Vector<Object>>();
 		Vector<Object> group = new Vector<Object>();
@@ -123,6 +129,7 @@ public class ClientLogic {
 		data.add(group);
 		CSVHandler.appendToCSV(FILEPATH + "GroupLst.csv", data);
 		instance.lastCreatedGid = newGroup.getGid();
+		System.out.println(newGroup.getGid());
 		return group;
 	}
 

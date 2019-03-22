@@ -47,6 +47,9 @@ public class Message {
 //		}else {
 //			return time+"     "+message+" : "+userName;
 //		}
-		return userName+" : "+message+"     "+time;
+		if(time.getTime() == 0) {
+			return message;
+		}
+		return userName+" : "+message+"             "+time.toString().substring(11, 16);
 	}
 }

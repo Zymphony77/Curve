@@ -567,6 +567,9 @@ public class ServerLogic {
 		
 		System.out.println("client #" + cid + " leaving group #" + gid);
 		
+		updateMessage(new SendMessageEvent(cid, gid, 
+				clientDataMap.get(cid).getClientName() + " left the group."));
+		
 		groupMemberMap.get(gid).removeMember(cid);
 		groupLogMap.get(gid).addLog(cid, time, "LEAVE");
 		
@@ -583,9 +586,6 @@ public class ServerLogic {
 		Connection.sendObject(clientSocket, response);
 		
 		forwardResponse(response);
-		
-		updateMessage(new SendMessageEvent(cid, gid, 
-				clientDataMap.get(cid).getClientName() + " left the group."));
 		
 		System.out.println("Transaction completed");
 	}

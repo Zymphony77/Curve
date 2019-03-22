@@ -19,6 +19,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.sql.Timestamp;
 import java.util.*;
 
 import client.Client;
@@ -28,7 +29,8 @@ import client.ClientThread;
 import connection.*;
 import server.*;
 
-import utility.csv.*;	
+import utility.csv.*;
+import utility.event.NewMessageEvent;	
 
 public class Main extends Application {
 	public static boolean isConected = false;
@@ -50,6 +52,10 @@ public class Main extends Application {
 			System.out.println(data);
 			gui = new ClientGUI((String) data.get(0).get(1), (int) data.get(0).get(0));
 			clientLogic.setCid((int)data.get(0).get(0));
+			if(clientLogic.getCid() > 0) {
+				clientLogic.connect(clientLogic.getCid());
+			}
+			loadOldMessage();
 			//ClientLogic.createClient((String) data.get(0).get(1));
 			gui.start(new Stage());
 			
@@ -153,6 +159,30 @@ public class Main extends Application {
 			gui = new ClientGUI(username_field.getText(), (int) data.get(0).get(0));
 			gui.start(new Stage());
 		} catch (FileNotFoundException e) {}
+	}
+	
+	public void loadOldMessage() {
+		try {
+			data = CSVHandler.readCSV(FILEPATH + "groupLst.csv");
+			for(Vector<Object> i : data) {
+				int gid = (int) i.get(0);
+				try {
+					Vector<Vector<Object>> tempp = CSVHandler.readCSV(FILEPATH + "MessageListOf"+gid+".csv");
+					ClientGUI.OldMessages.put(gid, new Vector<>());
+					for(Vector<Object> j : tempp) {
+						ClientGUI.OldMessages.get(gid).add(new NewMessageEvent(gid, 
+								(int) j.get(0), (String) j.get(1), new Timestamp((long) j.get(2)), (String) j.get(3)));
+					}
+				} catch (FileNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+			}
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	public static void main(String[] args) {

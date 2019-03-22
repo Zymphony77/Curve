@@ -8,9 +8,9 @@ import connection.Connection;
 import utility.event.ConnectEvent;
 
 public class Server {
-	public static final String PRIMARY_IP = "172.20.10.2";
+	public static final String PRIMARY_IP = "192.168.1.103";
 	public static final int PRIMARY_PORT = 1024;
-	public static final String SECONDARY_IP = "172.20.10.10";
+	public static final String SECONDARY_IP = "192.168.1.108";
 	public static final int SECONDARY_PORT = 1025;
 	public static boolean IS_PRIMARY = true;
 	

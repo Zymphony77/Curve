@@ -49,6 +49,7 @@ public class ClientGUI extends Application {
     private String username;
     private int cid;
     private int gid = 0;
+    private int gid2 = 0;
 	private ClientLogic client;
     private TextArea textChat;
     private TextArea textGroup;
@@ -110,7 +111,7 @@ public class ClientGUI extends Application {
 	        root.getChildren().add(node);
 	    
 			textChat = new TextArea();
-			textChat.setText("Enter a message");
+			textChat.setPromptText("Enter a message");
 			textChat.setLayoutX(5);
 		    	textChat.setLayoutY(400);
 		    	textChat.setPrefSize(335, 45);
@@ -126,7 +127,6 @@ public class ClientGUI extends Application {
 		    	Button sendButton = new Button("",imageViewSend);
 		    	sendButton.setLayoutX(344);
 		    	sendButton.setLayoutY(400);
-		    	sendButton.setText("");
 		    	//sendButton.setPrefHeight(35);
 		    	//sendButton.setPrefWidth(35);
 		    	sendButton.setPrefSize(35, 35);
@@ -135,7 +135,7 @@ public class ClientGUI extends Application {
 		    	// text box of new group
 		    	
 		    	textGroup = new TextArea();
-		    	textGroup.setText("Enter a group name");
+		    	textGroup.setPromptText("Enter a group name");
 		    	textGroup.setLayoutX(400);
 		    	textGroup.setLayoutY(400);
 		    	textGroup.setPrefSize(140, 45);
@@ -173,7 +173,7 @@ public class ClientGUI extends Application {
 		    	leaveGroupButton.setText("Leave");
 		    	leaveGroupButton.setPrefSize(55, 10);
 		    	
-		    	
+		    	root.getChildren().add(leaveGroupButton);
 		    	
 		    //	VBox groupLst = new VBox();
 //		    	String fileName = "GroupOf" + cid + ".csv";
@@ -234,7 +234,7 @@ public class ClientGUI extends Application {
          		groupLstAll.add(new Group((int) groupAll.get(j).get(0), (String) groupAll.get(j).get(1)));
         		}
 		    groupObservableLstAll = FXCollections.observableArrayList(groupLstAll);
-		    groupLstViewAll.setItems(groupObservableLst);
+		    groupLstViewAll.setItems(groupObservableLstAll);
 		    groupLstViewAll.setStyle("");
 		    root.getChildren().add(groupLstViewAll);
 	        
@@ -244,55 +244,54 @@ public class ClientGUI extends Application {
 		    historyLstView.setLayoutY(35);
 		    historyLstView.setPrefSize(390, 360);
 		    historyLstView.setCellFactory((param) -> {
-	    		ListCell<Message> cell = new ListCell<Message>() {
-	    			@Override
-	    			protected void updateItem(Message item, boolean empty) {
-	    				super.updateItem(item, empty);
-	    				if (item != null) {
-	    					System.out.println(item);
-	    					setText(item.toString());
-	    					if(item.getStatus() == true) {
-	    						setBackground(new Background(new BackgroundFill(
-		    							Color.ALICEBLUE, new CornerRadii(0), new Insets(0))));
-	    					}else {
-	    						setBackground(new Background(new BackgroundFill(
-		    							Color.ANTIQUEWHITE, new CornerRadii(0), new Insets(0))));
-	    					}
-	    					
-	    				}
-	    			}
-	    		};
-	    		cell.setMouseTransparent(true);
-	    		cell.setPrefWidth(387);
-	    		cell.setWrapText(true);
-	    		
-	    		return cell;
-	    });
+		    		ListCell<Message> cell = new ListCell<Message>() {
+		    			@Override
+		    			protected void updateItem(Message item, boolean empty) {
+		    				super.updateItem(item, empty);
+		    				if (item != null) {
+		    					setText(item.toString());
+		    					if(item.getStatus() == true) {
+		    						setBackground(new Background(new BackgroundFill(
+			    							Color.ALICEBLUE, new CornerRadii(0), new Insets(0))));
+		    					}else {
+		    						setBackground(new Background(new BackgroundFill(
+			    							Color.ANTIQUEWHITE, new CornerRadii(0), new Insets(0))));
+		    					}
+		    				} else {
+		    					setText("");
+		    					setBackground(null);
+		    				}
+		    			}
+		    		};
+		    		cell.setMouseTransparent(true);
+		    		cell.setPrefWidth(375);
+		    		cell.setWrapText(true);    		
+		    		return cell;
+		    });
 		    //test
-		    Timestamp testTime = new Timestamp(1);
-		    test.add(new Message("Pooh", testTime, "Hello", true));
-		    test.add(new Message("Ppeiei", testTime, "OMG", false));
+//		    Timestamp testTime = new Timestamp(1);
+//		    test.add(new Message("Pooh", testTime, "Hello", true));
+//		    test.add(new Message("Ppeiei", testTime, "Hi", false));
+//		    test.add(new Message("Ppeiei2", testTime, "OMG", false));
 		    //
-	    		historyObservableLst = FXCollections.observableArrayList(test);
-	    		historyLstView.setItems(historyObservableLst);
+		    historyObservableLst = FXCollections.observableArrayList(test);
+//    		historyLstView.setItems(historyObservableLst);
 	    		historyLstView.setStyle("");
 	    		root.getChildren().add(historyLstView);
-		    
 	    	
 		    	groupLstView.setOnMouseClicked((arg0) -> {
 		    				groupSelected = null;
 		                String groupName = groupLstView.getSelectionModel().getSelectedItem().getGroupName();
 		                Vector<Vector<Object>> temp;
 		                try {
-		                		root.getChildren().add(leaveGroupButton);
 							temp = CSVHandler.readCSV(Main.FILEPATH + "GroupLst.csv");
 			         		for (int i = 0; i < temp.size(); i++) {
-			         			if ((String) temp.get(i).get(1) == groupName) {
+			         			if (((String) temp.get(i).get(1)).equals(groupName)) {
 			         				gid = (int) temp.get(i).get(0);
 			         				break;
 			         			}
 			         		}
-			         		 
+			         		
 			                showChat(gid);
 						} catch (FileNotFoundException e) {
 							// TODO Auto-generated catch block
@@ -304,6 +303,19 @@ public class ClientGUI extends Application {
 		    	
 		    	groupLstViewAll.setOnMouseClicked((arg0) -> {
 	                groupSelected = groupLstViewAll.getSelectionModel().getSelectedItem().getGroupName();
+	                Vector<Vector<Object>> temp;
+	                try {
+						temp = CSVHandler.readCSV(Main.FILEPATH + "GroupLst.csv");
+		         		for (int i = 0; i < temp.size(); i++) {
+		         			if (((String) temp.get(i).get(1)).equals(groupSelected)) {
+		         				gid2 = (int) temp.get(i).get(0);
+		         				break;
+		         			}
+		         		}
+					} catch (FileNotFoundException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 	                
 		    	});
 		    	
@@ -347,7 +359,9 @@ public class ClientGUI extends Application {
 		        		  		groupSelected = null;
 		                  	try {
 		                  		if(textGroup.getText()!="") {
+		                  			System.out.println("111");
 		                  			ClientLogic.getInstance().createGroup(cid, textGroup.getText());
+		                  			System.out.println("222");
 			  	              		textGroup.clear();
 			  	              		ee.consume();
 		                  		}
@@ -363,10 +377,15 @@ public class ClientGUI extends Application {
 		    		  public void handle(ActionEvent ee)
 		    		  {
 		    			  try {
-		    				  if(gid!=0 && groupSelected!=null) {
-		    					  ClientLogic.getInstance().join(cid, gid);
+		    				  if(gid2!=0 && groupSelected!=null) {
+		    					  ClientLogic.getInstance().join(cid, gid2);
 			    				  textGroup.clear();
-			    				  ee.consume();
+			    				  groupLst.add(new Group(gid2, groupSelected));
+			    				  Platform.runLater(()->{
+			    					  groupObservableLst = FXCollections.observableArrayList(groupLst);
+				    				  groupLstView.setItems(groupObservableLst);
+				    				  ee.consume();
+			    				  });
 		    				  }
 		    			  } catch (Exception e) {
 		    				  e.printStackTrace();
@@ -383,7 +402,9 @@ public class ClientGUI extends Application {
 		    					  deleteGroupLst(gid);
 		    					  ClientLogic.getInstance().leave(cid, gid);
 			    				  textGroup.clear();
-			    				  ee.consume();
+//			    				  historyObservableLst = FXCollections.observableArrayList();
+//			    				  historyLstView.setItems(historyObservableLst);
+			    				  ee.consume();			    			
 		    				  }
 		    			  } catch (Exception e) {
 		    				  e.printStackTrace();
@@ -404,33 +425,23 @@ public class ClientGUI extends Application {
 		    	 stage.show();
 		}
 
-//		public void displayMessage(String username, Timestamp time, String message, boolean status){
-//			
-//			Message chat = new Message(username, time, message, status);
-//			history.add(chat);
-//			
-//			historyObservableLst.clear();
-//	    		historyObservableLst = FXCollections.observableArrayList(history);
-//	    		historyLstView.setItems(historyObservableLst);
-//	    		historyLstView.scrollTo(history.size()-1);
-//	    		
-//		}
 
 		public void addGroupLst(int gid, String groupname) {
 			System.out.println("add group");
 			groupLst.add(new Group(gid, groupname));
 			
-			groupObservableLst.clear();
-			groupObservableLst = FXCollections.observableArrayList(groupLst);
-			groupLstView.setItems(groupObservableLst);
-			
-			
-			groupLstAll.add(new Group(gid, groupname));
-			
-			groupObservableLstAll.clear();
-			groupObservableLstAll = FXCollections.observableArrayList(groupLstAll);
-			groupLstViewAll.setItems(groupObservableLstAll);
-			
+			Platform.runLater(() -> {
+				groupObservableLst.clear();
+				groupObservableLst = FXCollections.observableArrayList(groupLst);
+				groupLstView.setItems(groupObservableLst);
+				
+				
+				groupLstAll.add(new Group(gid, groupname));
+				
+				groupObservableLstAll.clear();
+				groupObservableLstAll = FXCollections.observableArrayList(groupLstAll);
+				groupLstViewAll.setItems(groupObservableLstAll);
+			});
 		}
 
 		public void deleteGroupLst(int gid) {
@@ -440,21 +451,42 @@ public class ClientGUI extends Application {
 					break;
 				}
 			}
-			
-			groupObservableLst.clear();
-			groupObservableLst = FXCollections.observableArrayList(groupLst);
-			groupLstView.setItems(groupObservableLst);
-			
+			Platform.runLater(() -> {
+				groupObservableLst.clear();
+				groupObservableLst = FXCollections.observableArrayList(groupLst);
+				groupLstView.setItems(groupObservableLst);
+			});
 		}
 		 
 		
 		public void showChat(int gid) {
-			if(OldMessages.containsKey(gid)) {
-				Vector<NewMessageEvent> temp = UnreadMessages.get(gid);
-				for(NewMessageEvent i : temp) {
-					OldMessages.get(gid).add(i);
-				}
+			if(gid!=this.gid) return;
+			if(!OldMessages.containsKey(gid)) {
+				OldMessages.put(gid, new Vector<>());
+			}
+			
+			history.clear();
+			
 			Vector<NewMessageEvent> temp2 = OldMessages.get(gid);
+			for(NewMessageEvent i:temp2) {
+				boolean status;
+				if(i.getCid()==cid) {
+					status = true;
+				}else {
+					status = false;
+				}	
+				Message message = new Message(i.getClientName(),i.getTime(),i.getMessage(),status);
+				history.add(message);
+			}
+			
+			if(!UnreadMessages.containsKey(gid)) {
+				UnreadMessages.put(gid, new Vector<>());
+			}
+			if(UnreadMessages.get(gid).size() > 0) {
+				history.add(new Message("", new Timestamp(0), "unread message", false));
+			}			
+
+			Vector<NewMessageEvent> temp = UnreadMessages.get(gid);
 			for(NewMessageEvent i:temp) {
 				boolean status;
 				if(i.getCid()==cid) {
@@ -466,16 +498,33 @@ public class ClientGUI extends Application {
 				history.add(message);
 			}
 			
-			historyObservableLst.clear();
-	    		historyObservableLst = FXCollections.observableArrayList(history);
-	    		historyLstView.setItems(historyObservableLst);
-	    		historyLstView.scrollTo(history.size()-1);
-			}else {
-				System.out.println("Bugggggggg!!!");
-				historyObservableLst.clear();
-	    			historyObservableLst = FXCollections.observableArrayList();
-	    			historyLstView.setItems(historyObservableLst);
+			temp = UnreadMessages.get(gid);
+			for(NewMessageEvent i : temp) {
+				OldMessages.get(gid).add(i);
 			}
+			UnreadMessages.get(gid).clear();
+			
+			System.out.println("Old:");
+			for (NewMessageEvent msg: OldMessages.get(gid)) {
+				System.out.println(msg.getClientName() + " " + msg.getMessage());
+			}
+			
+			System.out.println("Unread:");
+			for (NewMessageEvent msg: UnreadMessages.get(gid)) {
+				System.out.println(msg.getClientName() + " " + msg.getMessage());
+			}
+			
+			System.out.println("Hist:");
+			for (Message msg: history) {
+				System.out.println(msg);
+			}
+			Platform.runLater(()->{
+				historyObservableLst.clear();
+		    		historyObservableLst = FXCollections.observableArrayList(history);
+		    		historyLstView.setItems(historyObservableLst);
+		    		historyLstView.scrollTo(history.size()-1);
+			});
+			
 		}
 		
 		public void addOldMessage(NewMessageEvent message) {
@@ -487,7 +536,6 @@ public class ClientGUI extends Application {
 				Vector<NewMessageEvent> temp = new Vector<>();
 				temp.add(message);
 				OldMessages.put(message.getGid(), temp);
-				
 			}
 			
 		}
