@@ -45,11 +45,11 @@ public class ServerLogic {
 		retrieveGroupMessageData();
 		retrieveGroupLog();
 		
-		System.out.println(clientDataMap.size());
-		System.out.println(groupDataMap.size());
-		System.out.println(groupLogMap.size());
-		System.out.println(groupMemberMap.size());
-		System.out.println(groupMessageMap.size());
+//		System.out.println(clientDataMap.size());
+//		System.out.println(groupDataMap.size());
+//		System.out.println(groupLogMap.size());
+//		System.out.println(groupMemberMap.size());
+//		System.out.println(groupMessageMap.size());
 	}
 	
 	void synchronizeFile(String ipAddress, int port) {
@@ -258,39 +258,43 @@ public class ServerLogic {
 		Socket forwardSocket = new Socket(Server.PRIMARY_IP, Server.PRIMARY_PORT);
 		Connection.sendObject(forwardSocket, request);
 		
-		Event response = (Event) Connection.receiveObject(forwardSocket);
+		int cnt = (request instanceof CreateGroupEvent ? 3 : 1);
 		
-		if (response == null) {
-			return;
-		}
-		
-		handleResponse(response);
-		
-		// Only further forward response to client
-		if (response instanceof NewClientEvent) {
-			Connection.sendObject(clientSocket, response);
-			// Connect here -- Special case because clientSocket needs to be known
-			createConnection(clientSocket, new ConnectEvent(((NewClientEvent) response).getCid()));
-		} else if (response instanceof NewGroupEvent) {
-			for (int gid: clientSocketMap.keySet()) {
-				Connection.sendObject(clientSocketMap.get(gid), response);
-			}
-		} else if (response instanceof NewMessageEvent) {
-			for (int cid: groupMemberMap.get(((NewMessageEvent) response).getGid()).getCidSet()) {
-				if (clientSocketMap.containsKey(cid)) {
-					Connection.sendObject(clientSocketMap.get(cid), response);
-				}
-			}
-		} else if (response instanceof UpdateTransferEvent) {
-			Connection.sendObject(clientSocket, response);
-		} else if (response instanceof GroupLogTransferEvent) {
-			Timestamp time = ((GroupLogTransferEvent) response).getTime();
+		for (int i = 0; i < cnt; ++i) {
+			Event response = (Event) Connection.receiveObject(forwardSocket);
 			
-			// Do here -- Also special case
-			if (((GroupLogTransferEvent) response).getEvent().equals("JOIN")) {
-				addMember(clientSocket, time, (JoinGroupEvent) request);
-			} else {
-				removeMember(clientSocket, time, (LeaveGroupEvent) request);
+			if (response == null) {
+				return;
+			}
+			
+			handleResponse(response);
+			
+			// Only further forward response to client
+			if (response instanceof NewClientEvent) {
+				Connection.sendObject(clientSocket, response);
+				// Connect here -- Special case because clientSocket needs to be known
+				createConnection(clientSocket, new ConnectEvent(((NewClientEvent) response).getCid()));
+			} else if (response instanceof NewGroupEvent) {
+				for (int gid: clientSocketMap.keySet()) {
+					Connection.sendObject(clientSocketMap.get(gid), response);
+				}
+			} else if (response instanceof NewMessageEvent) {
+				for (int cid: groupMemberMap.get(((NewMessageEvent) response).getGid()).getCidSet()) {
+					if (clientSocketMap.containsKey(cid)) {
+						Connection.sendObject(clientSocketMap.get(cid), response);
+					}
+				}
+			} else if (response instanceof UpdateTransferEvent) {
+				Connection.sendObject(clientSocket, response);
+			} else if (response instanceof GroupLogTransferEvent) {
+				Timestamp time = ((GroupLogTransferEvent) response).getTime();
+				
+				// Do here -- Also special case
+				if (((GroupLogTransferEvent) response).getEvent().equals("JOIN")) {
+					addMember(clientSocket, time, (JoinGroupEvent) request);
+				} else {
+					removeMember(clientSocket, time, (LeaveGroupEvent) request);
+				}
 			}
 		}
 		
@@ -337,7 +341,10 @@ public class ServerLogic {
 			int gid = ((NewGroupEvent) response).getGid();
 			String groupName = ((NewGroupEvent) response).getGroupName();
 			
-			groupDataMap.put(gid,  new GroupData(gid, groupName));
+			groupDataMap.put(gid, new GroupData(gid, groupName));
+			groupMemberMap.put(gid, new GroupMemberData(gid));
+			groupMessageMap.put(gid, new GroupMessageData(gid));
+			groupLogMap.put(gid, new GroupLog(gid));
 			
 			Vector<Object> update = new Vector<>();
 			update.add(gid);
@@ -379,7 +386,7 @@ public class ServerLogic {
 			update.add(time.getTime());
 			update.add(event);
 			
-			CSVHandler.appendLineToCSV(GROUP_MESSAGE_DATA_PATH, update);
+			CSVHandler.appendLineToCSV(GROUP_LOG_PATH, update);
 		}
 		
 		System.out.println("Handle response done");
@@ -506,7 +513,7 @@ public class ServerLogic {
 				}
 			}
 			
-			System.out.println("DONE");
+			System.out.println("group #" + gid + " DONE");
 		}
 		
 		try {
