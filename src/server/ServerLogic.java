@@ -203,7 +203,13 @@ public class ServerLogic {
 		if (!Server.IS_PRIMARY) {
 			if (!(request instanceof ConnectEvent) && 
 					!(request instanceof DisconnectEvent) &&
-					!(request instanceof GetUpdateEvent)) {
+					!(request instanceof GetUpdateEvent) &&
+					!(request instanceof SynchronizeEvent) &&
+					!(request instanceof NewClientEvent) &&
+					!(request instanceof NewGroupEvent) &&
+					!(request instanceof NewMessageEvent) &&
+					!(request instanceof GroupLogTransferEvent) &&
+					!(request instanceof UpdateTransferEvent)) {
 				try {
 					System.out.println("Forwarding request to Primary Server...");
 					forwardRequest(clientSocket, request);
@@ -237,6 +243,8 @@ public class ServerLogic {
 			removeMember(clientSocket, (LeaveGroupEvent) request);
 		} else if (request instanceof SynchronizeEvent) {
 			sendServerFile(clientSocket);
+		} else {
+			handleResponse(request);
 		}
 	}
 	
@@ -251,6 +259,11 @@ public class ServerLogic {
 		Connection.sendObject(forwardSocket, request);
 		
 		Event response = (Event) Connection.receiveObject(forwardSocket);
+		
+		if (response == null) {
+			return;
+		}
+		
 		handleResponse(response);
 		
 		// Only further forward response to client
@@ -291,8 +304,12 @@ public class ServerLogic {
 			return;
 		}
 		
+		System.out.println("Function: Forward response");
+		
 		if (clientSocketMap.containsKey(-1)) {
-			Connection.sendObject(clientSocketMap.get(-1), response);
+			System.out.println("Forward response");
+//			Connection.sendObject(clientSocketMap.get(-1), response);
+			Connection.sendObject(Server.connectSocket, response);
 		}
 	}
 	
@@ -301,6 +318,8 @@ public class ServerLogic {
 			return;
 		}
 		
+		System.out.println("Handle response");
+		
 		waitSynchronization();
 		
 		if (response instanceof NewClientEvent) {
@@ -308,11 +327,23 @@ public class ServerLogic {
 			String clientName = ((NewClientEvent) response).getClientName();
 			
 			clientDataMap.put(cid, new ClientData(cid, clientName));
+			
+			Vector<Object> update = new Vector<>();
+			update.add(cid);
+			update.add(clientName);
+
+			CSVHandler.appendLineToCSV(CLIENT_DATA_PATH, update);
 		} else if (response instanceof NewGroupEvent) {
 			int gid = ((NewGroupEvent) response).getGid();
 			String groupName = ((NewGroupEvent) response).getGroupName();
 			
 			groupDataMap.put(gid,  new GroupData(gid, groupName));
+			
+			Vector<Object> update = new Vector<>();
+			update.add(gid);
+			update.add(groupName);
+			
+			CSVHandler.appendLineToCSV(GROUP_DATA_PATH, update);
 		} else if (response instanceof NewMessageEvent) {
 			int gid = ((NewMessageEvent) response).getGid();
 			int cid = ((NewMessageEvent) response).getCid();
@@ -320,7 +351,38 @@ public class ServerLogic {
 			String text = ((NewMessageEvent) response).getMessage();
 			
 			groupMessageMap.get(gid).addMessage(cid, time, text);
+			
+			Vector<Object> update = new Vector<>();
+			update.add(gid);
+			update.add(cid);
+			update.add(time.getTime());
+			update.add(text);
+			
+			CSVHandler.appendLineToCSV(GROUP_MESSAGE_DATA_PATH, update);
+		} else if (response instanceof GroupLogTransferEvent) {
+			int gid = ((GroupLogTransferEvent) response).getGid();
+			int cid = ((GroupLogTransferEvent) response).getCid();
+			Timestamp time = ((GroupLogTransferEvent) response).getTime();
+			String event = ((GroupLogTransferEvent) response).getEvent();
+			
+			groupLogMap.get(gid).addLog(cid, time, event);
+			
+			if (event.equals("JOIN")) {
+				groupMemberMap.get(gid).addMember(cid);
+			} else {
+				groupMemberMap.get(gid).removeMember(cid);
+			}
+			
+			Vector<Object> update = new Vector<>();
+			update.add(gid);
+			update.add(cid);
+			update.add(time.getTime());
+			update.add(event);
+			
+			CSVHandler.appendLineToCSV(GROUP_MESSAGE_DATA_PATH, update);
 		}
+		
+		System.out.println("Handle response done");
 	}
 	
 	private void createConnection(Socket clientSocket, ConnectEvent event) {
@@ -426,24 +488,17 @@ public class ServerLogic {
 		
 		HashMap<Integer, Vector<NewMessageEvent>> unread = new HashMap<>();
 		
-		System.out.println("CHECKPOINT 1");
-		
 		for (int gid: groupDataMap.keySet()) {
-			System.out.print(">>> " + gid + "...\t\t");
 			
 			if (groupMemberMap.get(gid).getCidSet().contains(cid)) {
 				unread.put(gid, new Vector<>());
 			} else {
-				System.out.println("PASS");
 				continue;
 			}
 			
 			Vector<NewMessageEvent> unreadMessage = unread.get(gid);
 			
-			System.out.print("FOR\t");
-			
 			for (GroupMessageData.Message message: groupMessageMap.get(gid).getMessageVector()) {
-				System.out.println("EVER IN");
 				if (message.getTime().after(latest)) {
 					unreadMessage.add(new NewMessageEvent(gid, message.getCid(),
 							clientDataMap.get(cid).getClientName(),

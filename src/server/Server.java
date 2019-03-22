@@ -9,9 +9,9 @@ import utility.event.ConnectEvent;
 
 public class Server {
 	public static final String PRIMARY_IP = "172.20.10.2";
-	public static final int PRIMARY_PORT = 1;
-	public static final String SECONDARY_IP = "172.20.10.12";
-	public static final int SECONDARY_PORT = 2;
+	public static final int PRIMARY_PORT = 1024;
+	public static final String SECONDARY_IP = "172.20.10.10";
+	public static final int SECONDARY_PORT = 1025;
 	public static boolean IS_PRIMARY = true;
 	
 	static ServerSocket serverSocket;
@@ -20,6 +20,7 @@ public class Server {
 	static Thread syncThread = null;
 	static boolean threadClosed = false;
 	static boolean startInitialization = false;
+	static boolean openedFirst = false;
 	
 	public static void main(String[] args) {
 		if (args.length == 1) {
@@ -64,21 +65,25 @@ public class Server {
 					
 					// Synchronize files
 					syncThread = new Thread(() -> {
-						if (IS_PRIMARY) {
-							ServerLogic.getInstance().synchronizeFile(SECONDARY_IP, SECONDARY_PORT);
-						} else {
-							ServerLogic.getInstance().synchronizeFile(PRIMARY_IP, PRIMARY_PORT);
+						if (!openedFirst) {
+							if (IS_PRIMARY) {
+								ServerLogic.getInstance().synchronizeFile(SECONDARY_IP, SECONDARY_PORT);
+							} else {
+								ServerLogic.getInstance().synchronizeFile(PRIMARY_IP, PRIMARY_PORT);
+							}
+							
+							ServerLogic.getInstance().retrieveClientData();
+							ServerLogic.getInstance().retrieveGroupData();
+							ServerLogic.getInstance().retrieveGroupMessageData();
+							ServerLogic.getInstance().retrieveGroupLog();
 						}
-						
-						ServerLogic.getInstance().retrieveClientData();
-						ServerLogic.getInstance().retrieveGroupData();
-						ServerLogic.getInstance().retrieveGroupMessageData();
-						ServerLogic.getInstance().retrieveGroupLog();
 					});
 					syncThread.start();
 					
 					while (!connectSocket.isClosed());
-				} catch (Exception e) {}
+				} catch (Exception e) {
+					openedFirst = true;
+				}
 			}
 		}).start();
 		
