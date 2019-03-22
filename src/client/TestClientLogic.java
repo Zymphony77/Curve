@@ -95,6 +95,7 @@ public class TestClientLogic {
 		ClientLogic.updateTransfer(updateTransferEvent);
 
 	}
+	
 
 	public static void main(String[] args) throws FileNotFoundException {
 		// TODO Auto-generated method stub
