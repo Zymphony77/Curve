@@ -47,59 +47,43 @@ public class ClientLogic {
 		return instance;
 	}
 
-	// Create Client
-	// send
+	// Client Creation Send
 	public static void createClient(String clientName) {
 		CreateClientEvent createClient = new CreateClientEvent(clientName);
 		Connection.sendObject(socket, createClient);
-
 	}
 
-	// receive
+	// Client Creation Receive
 	public static Vector<Object> newClient(NewClientEvent newClient) {
-
 		Vector<Vector<Object>> data = new Vector<Vector<Object>>();
-
 		Vector<Object> client = new Vector<Object>();
 		client.addElement(newClient.getCid());
 		client.addElement(newClient.getClientName());
 		Timestamp currentTime = new Timestamp((new Date()).getTime());
 		client.addElement((long)currentTime.getTime());
-
-		// String ipAddress = "cannot work";
-		// client.addElement(ipAddress);
 		data.add(client);
 		CSVHandler.writeCSV(FILEPATH + "Client.csv", data);
 
 		return client;
-
-		// TODO add function to tell UI
-//		UILogic.addNewClient(newClient.getCid(), newClient.getClientName()); // temporary name
-//		return true;
 	}
 
-	// Connecting
-	// send
+	// Connection Send
 	public static void connect(int cid, String ipAddress) {
 		ConnectEvent connect = new ConnectEvent(cid);
 		Connection.sendObject(socket, connect);
-
 	}
 
-	// receive
+	// Disconnection Send
 	public static void disconnect(int cid) {
 		DisconnectEvent disconnect = new DisconnectEvent(cid);
 		Connection.sendObject(socket, disconnect);
-
 	}
 
-	// Group Event
-	// send
+	// Group Creation Send
 	public static Vector<Object> createGroup(int cid, String groupName) throws FileNotFoundException {
 		CreateGroupEvent createGroup = new CreateGroupEvent(cid, groupName);
-		//Connection.sendObject(socket, createGroup); //FOR TEST
+		Connection.sendObject(socket, createGroup); //FOR TEST
 
-		// if successful, write
 		Vector<Vector<Object>> data = CSVHandler.readCSV(FILEPATH+"GroupLst.csv");
 		int gid = 0;
 		for (int i = 0; i < data.size(); i++) {
@@ -116,11 +100,10 @@ public class ClientLogic {
 		String fileName = FILEPATH + "GroupOf" + cid + ".csv";
 		CSVHandler.appendToCSV(fileName, data);
 
-		// TODO add function to tell UI
 		return group;
 	}
 
-	// receive
+	// Group Creation Receive
 	public static Vector<Object> newGroup(NewGroupEvent newGroup) {
 		Vector<Vector<Object>> data = new Vector<Vector<Object>>();
 		Vector<Object> group = new Vector<Object>();
@@ -129,17 +112,14 @@ public class ClientLogic {
 		data.add(group);
 		CSVHandler.appendToCSV(FILEPATH + "GroupLst.csv", data);
 
-		// TODO add function to tell UI
-//		UILogic.addNewGroup(gid, groupName);
 		return group;
 	}
 
-	// send
+	// Client Join Group Send
 	public static Vector<Object> join(int cid, int gid) throws FileNotFoundException {
 		JoinGroupEvent joinGroup = new JoinGroupEvent(cid, gid);
-		//Connection.sendObject(socket, joinGroup); //FOR TEST
+		Connection.sendObject(socket, joinGroup); //FOR TEST
 
-		// if successful, write
 		Vector<Vector<Object>> data = CSVHandler.readCSV(FILEPATH+"GroupLst.csv");
 		String groupName = "";
 		for (int i = 0; i < data.size(); i++) {
@@ -156,15 +136,13 @@ public class ClientLogic {
 		String fileName = FILEPATH + "GroupOf" + cid + ".csv";
 		CSVHandler.appendToCSV(fileName, data1);
 
-		// TODO add function to tell UI
-//		UILogic.addJoinGroup(cid, gid);
 		return group;
 	}
 
-	// send
+	// Client Leave Group Send
 	public static Vector<Object> leave(int cid, int gid) throws FileNotFoundException {
 		LeaveGroupEvent leaveGroup = new LeaveGroupEvent(cid, gid);
-		// Connection.sendObject(socket, leaveGroup); // FOR TEST
+		Connection.sendObject(socket, leaveGroup); // FOR TEST
 
 		Vector<Vector<Object>> data = CSVHandler.readCSV(FILEPATH+"GroupLst.csv");
 		String groupName = "";
@@ -193,24 +171,24 @@ public class ClientLogic {
 		}
 		System.out.println(dataNew);
 		CSVHandler.writeCSV(fileName, dataNew);
+		
 		return group;
 	}
 
-	// Message Event
-	// send
+	// Client Get Unread Message //misspelled
 	public static void getUnreadMesaage(int cid, Timestamp lastestTimestamp) {
 		GetUpdateEvent getUnreadMessage = new GetUpdateEvent(cid, lastestTimestamp);
 		Connection.sendObject(socket, getUnreadMessage);
 	}
 
-	// send
+	// Client Message Send
 	public static void sendMessage(int cid, int gid, String Message) {
 		SendMessageEvent sendMessageEvent = new SendMessageEvent(cid, gid, Message);
 		Connection.sendObject(socket, sendMessageEvent);
 
 	}
 
-	// receive
+	// Client Message Receive
 	public static Vector<Object> newMessage(NewMessageEvent newMessage) throws FileNotFoundException {
 
 		Vector<Vector<Object>> data = new Vector<Vector<Object>>();
@@ -230,20 +208,20 @@ public class ClientLogic {
 
 		String clientFileName = FILEPATH+"Client.csv";
 		
-			Vector<Vector<Object>> oldClientList = CSVHandler.readCSV(clientFileName);
-			Vector<Vector<Object>> newClientList = new Vector<Vector<Object>>();
-			Vector<Object> clientData = new Vector<Object>();
-			clientData.addElement(cid);
-			clientData.addElement(clientName);
-			clientData.addElement(time);
-			newClientList.add(clientData);
-			CSVHandler.writeCSV(clientFileName, newClientList);
-//		UILogic.addNewMessage(newMessage.getGid(), newMessage.getCid(), newMessage.getClientName(),
+		Vector<Vector<Object>> oldClientList = CSVHandler.readCSV(clientFileName);
+		Vector<Vector<Object>> newClientList = new Vector<Vector<Object>>();
+		Vector<Object> clientData = new Vector<Object>();
+		clientData.addElement(cid);
+		clientData.addElement(clientName);
+		clientData.addElement(time);
+		newClientList.add(clientData);
+		CSVHandler.writeCSV(clientFileName, newClientList);
+			
 	return message;
 
 	}
 
-	// Update Event
+	// Client Get Update Events(Group File, Unread Messages) Send
 	public static void getUpdateTransfer(int cid) throws FileNotFoundException {
 		String clientFileName = FILEPATH+"Client.csv";
 		Vector<Vector<Object>> client = CSVHandler.readCSV(clientFileName);
@@ -253,6 +231,7 @@ public class ClientLogic {
 		Connection.sendObject(socket, getUpdateEvent);
 	}
 
+	// Client Get Update Events(Group File, Unread Messages) Receive
 	public static void updateTransfer(UpdateTransferEvent updateTransfer) {
 		Vector<Vector<Object>> groupData = updateTransfer.getGroupData();
 		HashMap<Integer, Vector<NewMessageEvent>> unread = updateTransfer.getUnread();
@@ -278,10 +257,8 @@ public class ClientLogic {
 				System.out.println(fileName);
 				CSVHandler.appendToCSV(fileName, data);
 
-//					UILogic.addNewMessage(gid, cid, ClientName, time, text);
 			}
 		}
-//		return true;
 	}
 
 	public Socket getSocket() {
