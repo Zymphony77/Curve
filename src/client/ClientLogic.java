@@ -208,6 +208,7 @@ public class ClientLogic {
 		String clientName = newMessage.getClientName();
 		long time = newMessage.getTime().getTime();
 		String text = newMessage.getMessage();
+		message.addElement(cid);
 		message.addElement(clientName);
 		message.addElement(time);
 		message.addElement(text);
@@ -258,7 +259,7 @@ public class ClientLogic {
 
 				Vector<Vector<Object>> data = new Vector<Vector<Object>>();
 				Vector<Object> message = new Vector<Object>();
-
+				message.addElement(cid);
 				message.addElement(ClientName);
 				message.addElement(time);
 				message.addElement(text);
