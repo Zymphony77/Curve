@@ -127,7 +127,7 @@ public class CSVHandler {
 			writeLineCSV(file, new Vector<Object>(), sep, false);
 		}
 		
-		for (int i = 0; i < data.size(); ++i) {
+		for (int i = 1; i < data.size(); ++i) {
 			writeLineCSV(file, data.elementAt(i), sep, true);
 		}
 	}
