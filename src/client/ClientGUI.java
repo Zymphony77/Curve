@@ -6,6 +6,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Vector;
 
+import application.Main;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -56,8 +57,8 @@ public class ClientGUI extends Application {
     //test
     private static ArrayList<Message> test = new ArrayList<Message>();
     //--
-    private Vector<Vector<Object>> groupOf = null;
-    private Vector<Vector<Object>> groupAll = null;
+    private Vector<Vector<Object>> groupOf = new Vector<Vector<Object>> ();
+    private Vector<Vector<Object>> groupAll = new Vector<Vector<Object>> ();
     private String groupSelected = null;
     
     
@@ -183,17 +184,15 @@ public class ClientGUI extends Application {
 //		    	scrollPane.setLayoutY(5);
 //		    	root.getChildren().add(scrollPane);
 			try {
-				groupAll = CSVHandler.readCSV("data/GroupLst.csv");
+				groupAll = CSVHandler.readCSV(Main.FILEPATH + "GroupLst.csv");
 			} catch (FileNotFoundException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
+				utility.csv.CSVHandler.createFile(Main.FILEPATH + "GroupLst.csv");
 			}
 			
 			try {
-				groupOf = CSVHandler.readCSV("data/GroupOf"+cid+".csv");
+				groupOf = CSVHandler.readCSV(Main.FILEPATH + "GroupOf" + cid + ".csv");
 			} catch (FileNotFoundException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
+				utility.csv.CSVHandler.createFile(Main.FILEPATH + "GroupOf" + cid + ".csv");
 			}
 			
 		    	groupLstView = new ListView<Group>();
@@ -283,7 +282,7 @@ public class ClientGUI extends Application {
 		                if (ke.getCode().equals(KeyCode.ENTER))
 		                {
 		                		if(gid!=0) {
-		                			ClientLogic.sendMessage(cid,gid,textChat.getText());
+		                			ClientLogic.getInstance().sendMessage(cid,gid,textChat.getText());
 								textChat.clear();
 								ke.consume();
 		                		}
@@ -297,7 +296,7 @@ public class ClientGUI extends Application {
 		                  {
 		            		  	 groupSelected = null;
 		            		  	 if(gid!=0) {
-		                      	ClientLogic.sendMessage(cid,gid,textChat.getText());
+		                      	ClientLogic.getInstance().sendMessage(cid,gid,textChat.getText());
 								textChat.clear();
 								ee.consume();
 		            		  	 }
@@ -312,7 +311,7 @@ public class ClientGUI extends Application {
 		        		  		groupSelected = null;
 		                  	try {
 		                  		if(textGroup.getText()!="") {
-		                  			ClientLogic.createGroup(cid, textGroup.getText());
+		                  			ClientLogic.getInstance().createGroup(cid, textGroup.getText());
 			  	              		textGroup.clear();
 			  	              		ee.consume();
 		                  		}
@@ -329,7 +328,7 @@ public class ClientGUI extends Application {
 		    		  {
 		    			  try {
 		    				  if(gid!=0 && groupSelected!=null) {
-		    					  ClientLogic.join(cid, gid);
+		    					  ClientLogic.getInstance().join(cid, gid);
 			    				  textGroup.clear();
 			    				  ee.consume();
 		    				  }
@@ -346,7 +345,7 @@ public class ClientGUI extends Application {
 		    			  try {
 		    				  if(gid!=0) {
 		    					  deleteGroupLst(gid);
-		    					  ClientLogic.leave(cid, gid);
+		    					  ClientLogic.getInstance().leave(cid, gid);
 			    				  textGroup.clear();
 			    				  ee.consume();
 		    				  }

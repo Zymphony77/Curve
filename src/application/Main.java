@@ -21,10 +21,10 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.*;
 
-
+import client.Client;
 import client.ClientGUI;
 import client.ClientLogic;
-
+import client.ClientThread;
 import connection.*;
 import server.*;
 
@@ -39,12 +39,14 @@ public class Main extends Application {
 	private static ServerSocket listenSocket;
 	private static Stage stage;
 	private Vector<Vector<Object>> data;
-	private final static String FILEPATH = "data/csv/";
+	public final static String FILEPATH = "src/data/";
+	private static ClientLogic clientLogic;
 	
 	@Override
 	public void start(Stage primaryStage) {
 		try {
-			data = CSVHandler.readCSV(FILEPATH + "Client.csv");
+			data = CSVHandler.readCSV(FILEPATH + "ClientInfo.csv");
+			System.out.println(data);
 			ClientGUI gui = new ClientGUI((String) data.get(0).get(1), (int) data.get(0).get(0));
 			//ClientLogic.createClient((String) data.get(0).get(1));
 			gui.start(new Stage());
@@ -52,7 +54,7 @@ public class Main extends Application {
 		} catch (FileNotFoundException e) {
 			// TODO: handle exception
 			try {
-				utility.csv.CSVHandler.createFile(FILEPATH + "Client.csv");
+				utility.csv.CSVHandler.createFile(FILEPATH + "ClientInfo.csv");
 				stage = primaryStage;
 				Pane root = new Pane();
 				
@@ -130,14 +132,11 @@ public class Main extends Application {
 		            @Override public void handle(ActionEvent e) {
 		            	try {
 		            			//test();
-		            			ClientLogic.createClient(username_field.getText());
+		            			ClientLogic.getInstance().createClient(username_field.getText());
 		            			while(!isConected) {
-		            				connect();
 		            			}
-						} catch (Exception e1) {
-							// TODO Auto-generated catch block
-							e1.printStackTrace();
-						}
+		            			connect();
+						} catch (Exception e1) {}
 		            }
 		        });
 				
@@ -146,7 +145,6 @@ public class Main extends Application {
 			}
 			
 		}
-			
 	}
 	
 	public void test() throws Exception {
@@ -158,9 +156,8 @@ public class Main extends Application {
 	public void connect() {
 		stage.hide();
 		try {
-			data = CSVHandler.readCSV(FILEPATH + "Client.csv");
+			data = CSVHandler.readCSV(FILEPATH + "ClientInfo.csv");
 			ClientGUI gui = new ClientGUI(username_field.getText(), (int) data.get(0).get(0));
-			ClientLogic.createClient(username_field.getText());
 			gui.start(new Stage());
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
@@ -169,6 +166,10 @@ public class Main extends Application {
 	}
 	
 	public static void main(String[] args) {
+		clientLogic = ClientLogic.getInstance();
+		
+		ClientThread c = new ClientThread(clientLogic.getSocket());
+		
 		launch(args);
 	}
 }
