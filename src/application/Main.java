@@ -134,6 +134,7 @@ public class Main extends Application {
 		            			//test();
 		            			ClientLogic.getInstance().createClient(username_field.getText());
 		            			while(!isConected) {
+		            				Thread.sleep(100);
 		            			}
 		            			connect();
 						} catch (Exception e1) {}

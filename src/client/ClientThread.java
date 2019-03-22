@@ -47,7 +47,7 @@ public class ClientThread extends Thread {
 
 				} else if (receivedObj instanceof NewGroupEvent) {
 					Vector<Object> newGroup = ClientLogic.getInstance().newGroup((NewGroupEvent) receivedObj);
-//					ClientGUI.addGroupLst((int) newGroup.get(0), (String) newGroup.get(1));
+					ClientGUI.addGroupLst((int) newGroup.get(0), (String) newGroup.get(1));
 					
 
 					NewGroupEvent r = (NewGroupEvent) receivedObj;
@@ -66,17 +66,11 @@ public class ClientThread extends Thread {
 							"\n\tText: " + r.getMessage());
 					try {
 						newMessage = ClientLogic.getInstance().newMessage((NewMessageEvent) receivedObj);
-					} catch (FileNotFoundException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					//TODO cname ts text
-//					ClientGUI.displayMessage((String) newMessage.get(0), (Timestamp) newMessage.get(1), (String) newMessage.get(2));
+					} catch (FileNotFoundException e) {}
+					ClientGUI.displayMessage((String) newMessage.get(0), (Timestamp) newMessage.get(1), (String) newMessage.get(2));
 
 				} else if (receivedObj instanceof UpdateTransferEvent) {
 					ClientLogic.getInstance().updateTransfer((UpdateTransferEvent) receivedObj);
-					//TODO Puwong [groups(gid gname],[gid,(messages(gid cid ts strmsg cname))]
-					
 					UpdateTransferEvent r = (UpdateTransferEvent) receivedObj;
 					System.out.println("--> [UpdateTransferEvent]");
 					
