@@ -6,13 +6,13 @@ public class Message {
 	private String userName;
 	private String message;
 	private Timestamp time;
-	//private int status;
+	private boolean status;
 	
-	public Message(String userName,Timestamp time, String message) {
+	public Message(String userName,Timestamp time, String message, boolean status) {
 		this.userName = userName;
 		this.message = message;
 		this.time = time;
-		//this.status = status;
+		this.status = status;
 	}
 	
 	public String getUserName() {
@@ -33,6 +33,14 @@ public class Message {
 	public void setTime(Timestamp time) {
 		this.time = time;
 	}
+	public boolean getStatus() {
+		return status;
+	}
+
+	public void setStatus(boolean status) {
+		this.status = status;
+	}
+
 	public String toString() {
 //		if(status==0) {
 //			return userName+" : "+message+"     "+time;

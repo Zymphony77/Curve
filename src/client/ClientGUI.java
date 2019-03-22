@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Vector;
 
 import application.Main;
@@ -13,10 +14,12 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextArea;
@@ -25,6 +28,9 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -36,13 +42,14 @@ import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 import utility.csv.CSVHandler;
 import utility.event.Event;
+import utility.event.NewMessageEvent;
 
 
 public class ClientGUI extends Application {
     private String username;
     private int cid;
     private int gid = 0;
-    private ClientLogic client;
+	private ClientLogic client;
     private TextArea textChat;
     private TextArea textGroup;
     private static ListView<Group> groupLstView;
@@ -61,11 +68,16 @@ public class ClientGUI extends Application {
     private Vector<Vector<Object>> groupAll = new Vector<Vector<Object>> ();
     private String groupSelected = null;
     
-    
+    public static HashMap<Integer, Vector<NewMessageEvent>> OldMessages = new HashMap<Integer, Vector<NewMessageEvent>> ();
+    public static HashMap<Integer, Vector<NewMessageEvent>> UnreadMessages = new HashMap<Integer, Vector<NewMessageEvent>> ();
     
 	public ClientGUI(String username, int cid) {
 			this.username = username;
 			this.cid = cid;
+	}
+	
+	public int getGid() {
+		return gid;
 	}
 	
 	@Override
@@ -194,7 +206,8 @@ public class ClientGUI extends Application {
 			} catch (FileNotFoundException e1) {
 				utility.csv.CSVHandler.createFile(Main.FILEPATH + "GroupOf" + cid + ".csv");
 			}
-			
+			System.out.println(groupOf);
+			System.out.println(groupAll);
 		    	groupLstView = new ListView<Group>();
 		    	groupLstView.setLayoutX(400);
 		    	groupLstView.setLayoutY(5);
@@ -230,10 +243,35 @@ public class ClientGUI extends Application {
 		    historyLstView.setLayoutX(5);
 		    historyLstView.setLayoutY(35);
 		    historyLstView.setPrefSize(390, 360);
+		    historyLstView.setCellFactory((param) -> {
+	    		ListCell<Message> cell = new ListCell<Message>() {
+	    			@Override
+	    			protected void updateItem(Message item, boolean empty) {
+	    				super.updateItem(item, empty);
+	    				if (item != null) {
+	    					System.out.println(item);
+	    					setText(item.toString());
+	    					if(item.getStatus() == true) {
+	    						setBackground(new Background(new BackgroundFill(
+		    							Color.ALICEBLUE, new CornerRadii(0), new Insets(0))));
+	    					}else {
+	    						setBackground(new Background(new BackgroundFill(
+		    							Color.ANTIQUEWHITE, new CornerRadii(0), new Insets(0))));
+	    					}
+	    					
+	    				}
+	    			}
+	    		};
+	    		cell.setMouseTransparent(true);
+	    		cell.setPrefWidth(387);
+	    		cell.setWrapText(true);
+	    		
+	    		return cell;
+	    });
 		    //test
 		    Timestamp testTime = new Timestamp(1);
-		    test.add(new Message("Pooh", testTime, "Hello"));
-		    test.add(new Message("Ppeiei", testTime, "OMG"));
+		    test.add(new Message("Pooh", testTime, "Hello", true));
+		    test.add(new Message("Ppeiei", testTime, "OMG", false));
 		    //
 	    		historyObservableLst = FXCollections.observableArrayList(test);
 	    		historyLstView.setItems(historyObservableLst);
@@ -251,9 +289,6 @@ public class ClientGUI extends Application {
 			         		for (int i = 0; i < temp.size(); i++) {
 			         			if ((String) temp.get(i).get(1) == groupName) {
 			         				gid = (int) temp.get(i).get(0);
-			         				groupLst.clear();
-			         				
-			         				groupObservableLst = FXCollections.observableArrayList(groupLst);
 			         				break;
 			         			}
 			         		}
@@ -367,10 +402,10 @@ public class ClientGUI extends Application {
 		    	
 		    	 stage.show();
 		}
-		
-		// status = 0 is myself, status = 1 is other
-		public static void displayMessage(String username, Timestamp time, String message){
-			Message chat = new Message(username, time, message);
+
+		public void displayMessage(String username, Timestamp time, String message, boolean status){
+			
+			Message chat = new Message(username, time, message, status);
 			history.add(chat);
 			
 			historyObservableLst.clear();
@@ -380,12 +415,21 @@ public class ClientGUI extends Application {
 	    		
 		}
 
-		public static void addGroupLst(int gid, String groupname) {
+		public void addGroupLst(int gid, String groupname) {
+			System.out.println("add group");
 			groupLst.add(new Group(gid, groupname));
 			
 			groupObservableLst.clear();
 			groupObservableLst = FXCollections.observableArrayList(groupLst);
 			groupLstView.setItems(groupObservableLst);
+			
+			
+			groupLstAll.add(new Group(gid, groupname));
+			
+			groupObservableLstAll.clear();
+			groupObservableLstAll = FXCollections.observableArrayList(groupLstAll);
+			groupLstViewAll.setItems(groupObservableLstAll);
+			
 		}
 
 		public void deleteGroupLst(int gid) {
@@ -401,6 +445,9 @@ public class ClientGUI extends Application {
 			groupLstView.setItems(groupObservableLst);
 			
 		}
+		 
 		
-		//public void updateTransfer()
+//		public void updateTransfer() {
+//			
+//		}
 }

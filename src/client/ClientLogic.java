@@ -33,6 +33,7 @@ public class ClientLogic {
 	private final static ClientLogic instance = new ClientLogic();
 	private static Socket socket;
 	private int cid;
+	private int lastCreatedGid;
 	private final static String FILEPATH = "src/data/";
 
 	public ClientLogic() {
@@ -93,19 +94,17 @@ public class ClientLogic {
 	// Group Creation Send
 	public Vector<Object> createGroup(int cid, String groupName) throws FileNotFoundException {
 		CreateGroupEvent createGroup = new CreateGroupEvent(cid, groupName);
+		instance.lastCreatedGid = 0;
 		Connection.sendObject(socket, createGroup); // FOR TEST
-
-		Vector<Vector<Object>> data = CSVHandler.readCSV(FILEPATH + "GroupLst.csv");
-		int gid = 0;
-		for (int i = 0; i < data.size(); i++) {
-			if ((String) data.get(i).get(1) == groupName) {
-				gid = (int) data.get(i).get(0);
-				break;
-			}
+		while(instance.lastCreatedGid == 0) {
+			try {
+				Thread.sleep(100);
+			} catch (InterruptedException e) {}
 		}
+		Vector<Vector<Object>> data = CSVHandler.readCSV(FILEPATH + "GroupLst.csv");
 		data = new Vector<Vector<Object>>();
 		Vector<Object> group = new Vector<Object>();
-		group.addElement(gid);
+		group.addElement(instance.lastCreatedGid);
 		group.addElement(groupName);
 		data.add(group);
 		String fileName = FILEPATH + "GroupOf" + cid + ".csv";
@@ -122,7 +121,7 @@ public class ClientLogic {
 		group.addElement(newGroup.getGroupName());
 		data.add(group);
 		CSVHandler.appendToCSV(FILEPATH + "GroupLst.csv", data);
-
+		instance.lastCreatedGid = newGroup.getGid();
 		return group;
 	}
 

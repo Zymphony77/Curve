@@ -41,13 +41,14 @@ public class Main extends Application {
 	private Vector<Vector<Object>> data;
 	public final static String FILEPATH = "src/data/";
 	private static ClientLogic clientLogic;
+	private static ClientGUI gui;
 	
 	@Override
 	public void start(Stage primaryStage) {
 		try {
 			data = CSVHandler.readCSV(FILEPATH + "ClientInfo.csv");
 			System.out.println(data);
-			ClientGUI gui = new ClientGUI((String) data.get(0).get(1), (int) data.get(0).get(0));
+			gui = new ClientGUI((String) data.get(0).get(1), (int) data.get(0).get(0));
 			//ClientLogic.createClient((String) data.get(0).get(1));
 			gui.start(new Stage());
 			
@@ -115,15 +116,12 @@ public class Main extends Application {
 		                if (key.getCode().equals(KeyCode.ENTER))
 		                {
 		                	try {
-		                			test();
-		                			//ClientLogic.createClient(username_field.getText());
-//		                			while(!isConected) {
-//		                				connect();
-//		                			}
-							} catch (Exception e) {
-								// TODO Auto-generated catch block
-								e.printStackTrace();
-							}
+		                		ClientLogic.getInstance().createClient(username_field.getText());
+		            			while(!isConected) {
+		            				Thread.sleep(100);
+		            			}
+		            			connect();
+						} catch (Exception e) {}
 		                }
 		            }
 		        });
@@ -131,7 +129,6 @@ public class Main extends Application {
 		        login_button.setOnAction(new EventHandler<ActionEvent>() {
 		            @Override public void handle(ActionEvent e) {
 		            	try {
-		            			//test();
 		            			ClientLogic.getInstance().createClient(username_field.getText());
 		            			while(!isConected) {
 		            				Thread.sleep(100);
@@ -148,17 +145,11 @@ public class Main extends Application {
 		}
 	}
 	
-	public void test() throws Exception {
-		stage.hide();
-		ClientGUI gui = new ClientGUI("Pooh", 10);
-		gui.start(new Stage());
-	}
-	
 	public void connect() {
 		stage.hide();
 		try {
 			data = CSVHandler.readCSV(FILEPATH + "ClientInfo.csv");
-			ClientGUI gui = new ClientGUI(username_field.getText(), (int) data.get(0).get(0));
+			gui = new ClientGUI(username_field.getText(), (int) data.get(0).get(0));
 			gui.start(new Stage());
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
@@ -172,5 +163,9 @@ public class Main extends Application {
 		ClientThread c = new ClientThread(clientLogic.getSocket());
 		
 		launch(args);
+	}
+
+	public static ClientGUI getGui() {
+		return gui;
 	}
 }

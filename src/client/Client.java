@@ -1,5 +1,6 @@
 package client;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.Socket;
 import java.sql.Timestamp;
@@ -19,7 +20,7 @@ import utility.event.SendMessageEvent;
 public class Client {
 	private static ClientLogic clientLogic;
 	
-	public static void start() {
+	public static void main(String[] args) {
 		clientLogic = ClientLogic.getInstance();
 		
 		ClientThread c = new ClientThread(clientLogic.getSocket());
@@ -63,7 +64,12 @@ public class Client {
 			case 3:		// CreateGroupEvent
 				System.out.print("Group name: ");
 				String groupName = sc.next();
-				Connection.sendObject(clientLogic.getSocket(), new CreateGroupEvent(clientLogic.getCid(), groupName));
+				try {
+					clientLogic.createGroup(clientLogic.getCid(), groupName);
+				} catch (FileNotFoundException e2) {
+					// TODO Auto-generated catch block
+					e2.printStackTrace();
+				}
 				break;
 			case 4:		// DisconnectEvent
 				System.out.println("Disconnecting...");
@@ -80,7 +86,9 @@ public class Client {
 					System.out.println(">> gid starts from 1");
 					break;
 				}
-				Connection.sendObject(clientLogic.getSocket(), new JoinGroupEvent(clientLogic.getCid(), gid));
+				try {
+					clientLogic.join(clientLogic.getCid(), gid);
+				} catch (FileNotFoundException e1) {}
 				break;
 			case 7: 	// LeaveGroupEvent
 				System.out.print("Gid: ");
@@ -89,7 +97,12 @@ public class Client {
 					System.out.println(">> gid starts from 1");
 					break;
 				}
-				Connection.sendObject(clientLogic.getSocket(), new LeaveGroupEvent(clientLogic.getCid(), gid));
+				try {
+					clientLogic.leave(clientLogic.getCid(), gid);
+				} catch (FileNotFoundException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 				break;
 			case 8:		// SendMessageEvent
 				System.out.print("Gid: ");
