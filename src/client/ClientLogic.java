@@ -9,6 +9,7 @@ import java.util.*;
 import java.util.HashMap;
 import java.util.Vector;
 
+import application.Main;
 import utility.csv.CSVHandler;
 import utility.event.ConnectEvent;
 import utility.event.CreateClientEvent;
@@ -34,7 +35,9 @@ public class ClientLogic {
 	private static Socket socket;
 	private int cid;
 	private int lastCreatedGid;
+	private String lastGroupName;
 	private final static String FILEPATH = "src/data/";
+	
 
 	public ClientLogic() {
 		reconnect();
@@ -108,6 +111,7 @@ public class ClientLogic {
 			} catch (InterruptedException e) {}
 		}
 		System.out.println("ccc");
+		Main.getGui().addGroupLst(instance.lastCreatedGid, instance.lastGroupName);
 		Vector<Vector<Object>> data = CSVHandler.readCSV(FILEPATH + "GroupLst.csv");
 		data = new Vector<Vector<Object>>();
 		Vector<Object> group = new Vector<Object>();
@@ -129,6 +133,7 @@ public class ClientLogic {
 		data.add(group);
 		CSVHandler.appendToCSV(FILEPATH + "GroupLst.csv", data);
 		instance.lastCreatedGid = newGroup.getGid();
+		instance.lastGroupName = newGroup.getGroupName();
 		System.out.println(newGroup.getGid());
 		return group;
 	}

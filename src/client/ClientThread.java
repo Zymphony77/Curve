@@ -48,7 +48,7 @@ public class ClientThread extends Thread {
 				} else if (receivedObj instanceof NewGroupEvent) {
 					System.out.println("ININ");
 					Vector<Object> newGroup = ClientLogic.getInstance().newGroup((NewGroupEvent) receivedObj);
-					Main.getGui().addGroupLst((int) newGroup.get(0), (String) newGroup.get(1));
+					Main.getGui().addGroupLstAll((int) newGroup.get(0), (String) newGroup.get(1));
 					
 					NewGroupEvent r = (NewGroupEvent) receivedObj;
 					System.out.println("--> [NewGroupEvent]");

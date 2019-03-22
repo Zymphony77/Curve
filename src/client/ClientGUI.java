@@ -436,8 +436,15 @@ public class ClientGUI extends Application {
 				groupLstView.setItems(groupObservableLst);
 				
 				
-				groupLstAll.add(new Group(gid, groupname));
 				
+			});
+		}
+		
+		public void addGroupLstAll(int gid, String groupname) {
+			System.out.println("add group");
+			groupLstAll.add(new Group(gid, groupname));
+			
+			Platform.runLater(() -> {
 				groupObservableLstAll.clear();
 				groupObservableLstAll = FXCollections.observableArrayList(groupLstAll);
 				groupLstViewAll.setItems(groupObservableLstAll);
