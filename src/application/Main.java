@@ -66,14 +66,14 @@ public class Main extends Application {
 				stage = primaryStage;
 				Pane root = new Pane();
 				
-				Image background = new Image("file:res/background.jpg");
+				Image background = new Image("background.jpg");
 				ImageView backgroundShow = new ImageView(background);
 				backgroundShow.setFitHeight(378);
 				backgroundShow.setFitWidth(310);
 				backgroundShow.toBack();
 				root.getChildren().add(backgroundShow);
 				
-				Image logo = new Image("file:res/logo.png");
+				Image logo = new Image("logo.png");
 				ImageView logoShow = new ImageView(logo);
 				logoShow.setFitHeight(65);
 				logoShow.setFitWidth(65);

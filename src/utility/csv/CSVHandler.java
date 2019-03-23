@@ -5,6 +5,12 @@ import java.util.*;
 
 public class CSVHandler {
 	private static Object convertType(String s) {
+		if (s.equals("\"\"")) {
+			return "";
+		} else if (s.equals("")) {
+			return 0;
+		}
+		
 		try {
 			Long num = Long.parseLong(s);
 			
@@ -42,6 +48,10 @@ public class CSVHandler {
 				boolean inQuote = false;
 				int prev = 0;
 				
+				if (line.length() == 0) {
+					break;
+				}
+				
 				for (int i = 0; i < line.length(); ++i) {
 					if (line.charAt(i) == ',' && !inQuote) {
 						token.add(convertType(line.substring(prev, i)));
@@ -68,12 +78,10 @@ public class CSVHandler {
 	
 	public static void createFile(String file) {
 		try {
-			File dir = new File("data/");
-			if (!dir.exists()) {
-				dir.mkdir();
-			}
-			
 			File f = new File(file);
+			if (f.getParentFile() != null) {
+				f.getParentFile().mkdirs();
+			}
 			if (!f.exists()) {
 				f.createNewFile();
 			}

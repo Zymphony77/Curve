@@ -85,7 +85,7 @@ public class ClientGUI extends Application {
 	public void start(Stage stage) {
 			Pane root = new Pane();
 			//root.setStyle("-fx-background-color: #ffa88c");
-			Image background = new Image("file:res/background2.png");
+			Image background = new Image("background2.png");
 			ImageView backgroundShow = new ImageView(background);
 			backgroundShow.setFitHeight(665);
 			backgroundShow.setFitWidth(665);
@@ -119,7 +119,7 @@ public class ClientGUI extends Application {
 		    	textChat.setWrapText(true);
 		    	root.getChildren().add(textChat);
 		    	
-		    	Image sendImage = new Image("file:res/send.png");
+		    	Image sendImage = new Image("send.png");
 		    ImageView imageViewSend = new ImageView(sendImage);
 		    imageViewSend.setFitWidth(35);
 		    imageViewSend.setFitHeight(35);
@@ -143,7 +143,7 @@ public class ClientGUI extends Application {
 		    	textGroup.setWrapText(true);
 		    	root.getChildren().add(textGroup);
 		    	
-		    	Image newGroupImage = new Image("file:res/newGroup.png");
+		    	Image newGroupImage = new Image("newGroup.png");
 		    	ImageView imageViewNG = new ImageView(newGroupImage);
 		    imageViewNG.setFitHeight(35);
 		    	imageViewNG.setFitWidth(35);
@@ -155,7 +155,7 @@ public class ClientGUI extends Application {
 		    	newGroupButton.setPrefSize(35, 35);
 		    	root.getChildren().add(newGroupButton);
 		    	
-		    	Image joinGroupImage = new Image("file:res/joinGroup.png");
+		    	Image joinGroupImage = new Image("joinGroup.png");
 		    	ImageView imageViewJG = new ImageView(joinGroupImage);
 		    imageViewJG.setFitHeight(35);
 		    	imageViewJG.setFitWidth(35);
@@ -328,12 +328,33 @@ public class ClientGUI extends Application {
 		            		groupSelected = null;
 		                if (ke.getCode().equals(KeyCode.ENTER))
 		                {
-		                		if(gid!=0) {
-		                			ClientLogic.getInstance().sendMessage(cid,gid,textChat.getText());
-								textChat.clear();
-								ke.consume();
-		                		}
+	                		if(gid!=0 && !textChat.getText().equals("")) {
+	                			ClientLogic.getInstance().sendMessage(cid,gid,textChat.getText());
+	                			textChat.clear();
+	                		}
+							ke.consume();
 		                }
+		            }
+		        });
+		    	
+		    	textGroup.setOnKeyPressed(new EventHandler<KeyEvent>()
+		        {
+		            @Override
+		            public void handle(KeyEvent ke)
+		            {
+        		  		groupSelected = null;
+	                  	try {
+	                  		if (ke.getCode().equals(KeyCode.ENTER)) {
+	                  			if (!textGroup.getText().equals("")) {
+	                  				ClientLogic.getInstance().createGroup(cid, textGroup.getText());
+	                  				textGroup.clear();
+	                  			}
+	                  			ke.consume();
+	                  		}
+	  					} catch (Exception e) {
+	  						// TODO Auto-generated catch block
+	  						e.printStackTrace();
+	  					}
 		            }
 		        });
 	
@@ -355,10 +376,9 @@ public class ClientGUI extends Application {
 		        	  @Override
 		              public void handle(ActionEvent ee)
 		              {
-		        		  		System.out.println("IN");
 		        		  		groupSelected = null;
 		                  	try {
-		                  		if(textGroup.getText()!="") {
+		                  		if(!textGroup.getText().equals("")) {
 		                  			System.out.println("111");
 		                  			ClientLogic.getInstance().createGroup(cid, textGroup.getText());
 		                  			System.out.println("222");
@@ -406,6 +426,7 @@ public class ClientGUI extends Application {
 //			    				  historyLstView.setItems(historyObservableLst);
 			    				  ee.consume();			    			
 		    				  }
+		    				  gid = 0;
 		    			  } catch (Exception e) {
 		    				  e.printStackTrace();
 		    			  }

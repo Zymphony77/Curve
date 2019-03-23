@@ -101,7 +101,7 @@ public class TestClientLogic {
 	private static void print() {
 		System.out.println("-------------------------------");
 		System.out.println("Request List");
-		System.out.println("Current cid: " + (cid == -1 ? "Not Set" : cid));
+//		System.out.println("Current cid: " + (cid == -1 ? "Not Set" : cid));
 		System.out.println("-------------------------------");
 		System.out.println("0: [Locally] Set cid");
 		System.out.println("1: ConnectEvent");
