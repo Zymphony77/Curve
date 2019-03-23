@@ -264,7 +264,7 @@ public class ClientGUI extends Application {
 		    			}
 		    		};
 		    		cell.setMouseTransparent(true);
-		    		cell.setPrefWidth(375);
+		    		cell.setPrefWidth(350);
 		    		cell.setWrapText(true);    		
 		    		return cell;
 		    });

@@ -41,10 +41,6 @@ public class ClientLogic {
 
 	public ClientLogic() {
 		reconnect();
-//		if(cid > 0) {
-//			System.out.println(cid);
-//			connect(cid);
-//		}
 	}
 	
 	public void reconnect() {
@@ -57,6 +53,10 @@ public class ClientLogic {
 			try {
 				Thread.sleep(1000);
 			} catch (Exception e) {}
+		}
+		if(cid > 0) {
+			System.out.println(cid);
+			connect(cid);
 		}
 		System.out.println("connected");
 	}
